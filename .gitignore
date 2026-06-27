@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.*
+*.local
+secrets/
+.DS_Store
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
+data/raw/
+*.zip
