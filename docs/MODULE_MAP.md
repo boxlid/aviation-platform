@@ -47,6 +47,9 @@ instead of re-reading code. Keep it in sync when interfaces change.
 - `ingest_t100(log, run_id, months=3) -> dict` — drive BTS form, load → `t100_segment`
 - `download_month(page, year, month, log)` · `load_csv(path, log)` · `recent_periods(n, lag=4)`
 
+### `app/ingest_airports.py` — OurAirports (public domain)
+- `ingest_airports(log, run_id) -> dict` — download airports.csv + runways.csv → `airports`, `runways`
+
 ## Integrations
 
 ### `app/gmail.py` — Gmail OAuth + ingest + search
@@ -61,19 +64,26 @@ instead of re-reading code. Keep it in sync when interfaces change.
 | `faa_reference` | FAA ACFTREF | daily | `aircraft_ref` |
 | `faa_part135` | FAA Part 135 xlsx | weekly | `operators`, `part135_aircraft` |
 | `t100_segment` | BTS T-100 (browser) | weekly | `t100_segment` |
+| `ourairports` | OurAirports CSVs | weekly | `airports`, `runways` |
 | `gmail_ingest` | Gmail API | 15 min | `emails` |
 
 ## Database objects
 **Tables:** `operators`, `part135_aircraft`, `faa_registry`, `aircraft_ref`, `t100_segment`,
-`emails`, `services`, `service_runs`, `service_logs`, `notifications`.
-**Views:** `charter_fleet` (tail→operator→aircraft→Mode S hex), `charter_routes` (T-100 CLASS L/P = charter).
+`airports`, `runways`, `emails`, `services`, `service_runs`, `service_logs`, `notifications`.
+**Views:** `charter_fleet` (tail→operator→aircraft→Mode S hex), `charter_routes` (T-100 CLASS L/P = charter),
+`airport_capability` (airport + longest runway / runway count).
 
 ## API routes (`app/api.py`, prefix `/api`)
 - Notifications: `GET /notifications`, `POST /notifications/read`
 - Services: `GET /services`, `GET /services/{name}`, `POST /services/{name}/run|pause|resume`, `PATCH /services/{name}/interval`, `GET /services/{name}/runs|logs`, `GET /logs`
-- Fleet/operators: `GET /fleet`, `GET /aircraft/{n}`, `GET /operators`, `GET /operators/{designator}`, `GET /fsdo?name=`, `GET /routes`, `GET /stats`
+- Fleet/operators: `GET /fleet`, `GET /aircraft/{n}`, `GET /operators`, `GET /operators/{designator}`, `GET /fsdo?name=`, `GET /routes`, `GET /airports`, `GET /stats`
 - Emails/Gmail: `GET /emails`, `GET /gmail/status|connect|callback`, `POST /gmail/disconnect`
 
 ## Pages (`app/main.py` → `app/templates/`)
 `/` dashboard · `/fleet` · `/operators` · `/operator/{designator}` · `/fsdo?name=` ·
-`/routes` · `/emails` · `/settings/services` · `/settings/services/{name}`
+`/routes` · `/airports` · `/emails` · `/settings/services` · `/settings/services/{name}`
+
+## Deployment
+`deploy/com.sonicflights.app.plist` + `deploy/install-autostart.sh` — launchd user agent
+(autostart on login, restart on crash) running uvicorn on `0.0.0.0:8000`. Postgres autostarts
+via `brew services`. Manage: `launchctl load|unload ~/Library/LaunchAgents/com.sonicflights.app.plist`.

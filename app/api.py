@@ -185,6 +185,28 @@ def routes(q: Optional[str] = None, origin: Optional[str] = None, dest: Optional
     return db.query(sql, params)
 
 
+@router.get("/airports")
+def airports(q: Optional[str] = None, country: Optional[str] = None, type: Optional[str] = None,
+             min_runway: int = 0, limit: int = 200):
+    sql = "SELECT * FROM airport_capability WHERE 1=1"
+    params: list = []
+    if q:
+        sql += " AND (name ILIKE %s OR municipality ILIKE %s OR iata_code ILIKE %s OR ident ILIKE %s)"
+        like = f"%{q}%"; params += [like, like, like, like]
+    if country:
+        sql += " AND iso_country = %s"; params.append(country.upper())
+    if type:
+        sql += " AND type = %s"; params.append(type)
+    else:
+        # Default to landplane airports — seaplane "runways" are lake lengths, heliports have none.
+        sql += " AND type NOT IN ('seaplane_base', 'heliport', 'balloonport', 'closed')"
+    if min_runway:
+        sql += " AND longest_runway_ft >= %s"; params.append(min_runway)
+    sql += " ORDER BY longest_runway_ft DESC NULLS LAST LIMIT %s"
+    params.append(min(limit, 500))
+    return db.query(sql, params)
+
+
 @router.get("/stats")
 def stats():
     one = db.query_one
@@ -196,6 +218,7 @@ def stats():
         "emails": one("SELECT count(*) c FROM emails")["c"],
         "adsb_ready": one("SELECT count(*) c FROM charter_fleet WHERE mode_s_hex IS NOT NULL AND mode_s_hex<>''")["c"],
         "charter_segments": one("SELECT count(*) c FROM charter_routes")["c"],
+        "airports": one("SELECT count(*) c FROM airports")["c"],
     }
     out["by_category"] = db.query("""
         SELECT COALESCE(ar.category,'Unknown') category, count(*) n

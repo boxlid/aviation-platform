@@ -182,6 +182,33 @@ SF.fsdoDetail = async () => {
   SF.sortable($('#tbl'), d.operators, rowHTML);
 };
 
+/* ── Airports (OurAirports) ────────────────────────────────── */
+SF.airports = async () => {
+  const tbl = $('#tbl');
+  const rowHTML = a => `
+    <tr>
+      <td>${esc(a.name)} <span class="muted" style="font-size:11px">${esc((a.type || '').replace('_', ' '))}</span></td>
+      <td class="tail">${esc(a.iata_code || '')}</td>
+      <td class="dim">${esc(a.icao_code || a.ident)}</td>
+      <td>${esc(a.municipality || '')}</td>
+      <td class="muted">${esc(a.iso_country || '')}</td>
+      <td class="num">${a.longest_runway_ft ? '<b>' + fmtNum(a.longest_runway_ft) + '</b> ft' : '<span class="muted">—</span>'}</td>
+      <td class="num dim">${fmtNum(a.runway_count)}</td>
+    </tr>`;
+  let sorter = null;
+  const run = async () => {
+    const params = new URLSearchParams({ limit: 300, min_runway: $('#minrwy').value });
+    if ($('#q').value) params.set('q', $('#q').value);
+    if ($('#country').value) params.set('country', $('#country').value);
+    const rows = await getJSON('/api/airports?' + params);
+    $('#count').textContent = rows.length + (rows.length === 300 ? '+' : '') + ' airports';
+    sorter = sorter ? (sorter.update(rows), sorter) : SF.sortable(tbl, rows, rowHTML);
+  };
+  ['#q', '#country'].forEach(s => $(s).addEventListener('input', debounce(run, 300)));
+  $('#minrwy').addEventListener('change', run);
+  run();
+};
+
 /* ── Charter routes (T-100) ────────────────────────────────── */
 SF.routes = async () => {
   const run = async () => {

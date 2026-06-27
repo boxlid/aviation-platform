@@ -68,6 +68,11 @@ def routes_page(request: Request):
     return page(request, "routes.html", active="routes", title="Charter Routes")
 
 
+@app.get("/airports", response_class=HTMLResponse)
+def airports_page(request: Request):
+    return page(request, "airports.html", active="airports", title="Airports")
+
+
 @app.get("/emails", response_class=HTMLResponse)
 def emails_page(request: Request):
     return page(request, "emails.html", active="emails", title="Emails")
