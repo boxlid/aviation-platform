@@ -216,7 +216,13 @@ def airport_detail(ident: str):
     runways = db.query(
         "SELECT le_ident, he_ident, length_ft, width_ft, surface, lighted, closed "
         "FROM runways WHERE airport_ident=%s ORDER BY length_ft DESC NULLS LAST", (ident,))
-    return {"airport": ap, "capability": cap, "runways": runways}
+    # FAA airport detail (US): owner/manager contacts, joined on FAA location id = local_code.
+    faa = None
+    if ap.get("local_code"):
+        faa = db.query_one(
+            "SELECT owner_name, owner_phone, manager_name, manager_phone FROM faa_airport_detail WHERE location_id=%s",
+            (ap["local_code"],))
+    return {"airport": ap, "capability": cap, "runways": runways, "faa": faa}
 
 
 @router.get("/stats")

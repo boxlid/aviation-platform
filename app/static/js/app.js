@@ -215,29 +215,48 @@ SF.airports = async () => {
 SF.airportDetail = async (ident) => {
   const d = await getJSON('/api/airports/' + encodeURIComponent(ident));
   if (!d || !d.airport) { $('#ap-name').textContent = 'Airport not found'; return; }
-  const a = d.airport, cap = d.capability || {};
+  const a = d.airport, cap = d.capability || {}, faa = d.faa || {};
   $('#ap-name').textContent = a.name;
-  const coords = (a.latitude_deg != null && a.longitude_deg != null)
-    ? `${(+a.latitude_deg).toFixed(4)}, ${(+a.longitude_deg).toFixed(4)}` : '—';
-  const field = (k, v) => v != null && v !== '' && v !== undefined
-    ? `<div><div class="k muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1px">${k}</div><div style="margin-top:3px">${esc(v)}</div></div>` : '';
-  const link = (k, url) => url ? `<div><div class="k muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1px">${k}</div><div style="margin-top:3px"><a href="${esc(url)}" target="_blank" rel="noopener">open ↗</a></div></div>` : '';
+  const lat = a.latitude_deg, lon = a.longitude_deg;
+  const coords = (lat != null && lon != null) ? `${(+lat).toFixed(4)}, ${(+lon).toFixed(4)}` : '—';
+
+  // Top stat cards
   const cards = [
     ['Size', cleanType(a.type) || '—'],
     ['Longest runway', cap.longest_runway_ft ? fmtNum(cap.longest_runway_ft) + ' ft' : '—'],
     ['Runways', fmtNum(cap.runway_count)],
     ['Elevation', a.elevation_ft != null && a.elevation_ft !== '' ? fmtNum(a.elevation_ft) + ' ft' : '—'],
   ];
-  $('#ap-meta').innerHTML = cards.map(([k, v]) =>
-    `<div class="panel stat"><div class="glow"></div><div class="k">${k}</div><div class="v" style="font-size:22px">${esc(v)}</div></div>`).join('')
-    + `<div class="panel pad" style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:26px">
-        ${field('IATA', a.iata_code)} ${field('ICAO', a.icao_code)} ${field('Ident', a.ident)}
-        ${field('Local', a.local_code)} ${field('GPS', a.gps_code)}
-        ${field('Country', a.iso_country)} ${field('Region', a.iso_region)} ${field('City', a.municipality)}
-        ${field('Continent', a.continent)} ${field('Coordinates', coords)}
-        ${field('Scheduled service', a.scheduled_service ? 'Yes' : 'No')}
-        ${link('Website', a.home_link)} ${link('Wikipedia', a.wikipedia_link)}
-      </div>`;
+  $('#ap-stats').innerHTML = cards.map(([k, v]) =>
+    `<div class="panel stat"><div class="glow"></div><div class="k">${k}</div><div class="v" style="font-size:22px">${esc(v)}</div></div>`).join('');
+
+  // Vertical key/value pane — label left, value right
+  const kv = (k, v) => (v == null || v === '' ) ? '' : `<div class="kv"><span class="kv-k">${k}</span><span class="kv-v">${v}</span></div>`;
+  const kvLink = (k, url) => url ? `<div class="kv"><span class="kv-k">${k}</span><span class="kv-v"><a href="${esc(url)}" target="_blank" rel="noopener">open ↗</a></span></div>` : '';
+  $('#ap-info').innerHTML =
+    kv('IATA', esc(a.iata_code)) + kv('ICAO', esc(a.icao_code)) + kv('Ident', esc(a.ident)) +
+    kv('Local code', esc(a.local_code)) + kv('GPS code', esc(a.gps_code)) +
+    kv('City', esc(a.municipality)) + kv('Region', esc(a.iso_region)) + kv('Country', esc(a.iso_country)) +
+    kv('Coordinates', esc(coords)) + kv('Elevation', a.elevation_ft != null ? fmtNum(a.elevation_ft) + ' ft' : '') +
+    kv('Scheduled service', a.scheduled_service ? 'Yes' : 'No') +
+    (faa && faa.owner_name ? kv('Owner', esc(faa.owner_name)) + kv('Owner phone', esc(faa.owner_phone)) : '') +
+    (faa && faa.manager_name ? kv('Manager', esc(faa.manager_name)) + kv('Manager phone', esc(faa.manager_phone)) : '') +
+    kvLink('Website', a.home_link) + kvLink('Wikipedia', a.wikipedia_link);
+
+  // Map (Leaflet + CARTO dark tiles — no API key)
+  if (lat != null && lon != null && window.L) {
+    const map = L.map('map', { zoomControl: true, attributionControl: true }).setView([+lat, +lon], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19, attribution: '© OpenStreetMap © CARTO'
+    }).addTo(map);
+    L.circleMarker([+lat, +lon], { radius: 8, color: '#3ce0ff', fillColor: '#3ce0ff', fillOpacity: 0.55, weight: 2 })
+      .addTo(map).bindPopup(esc(a.name));
+    setTimeout(() => map.invalidateSize(), 120);
+  } else {
+    $('#map').innerHTML = '<div class="empty">No coordinates</div>';
+  }
+
+  // Runways
   const rwy = (d.runways || []).map(r => ({ ...r, ends: `${r.le_ident || ''}/${r.he_ident || ''}` }));
   const rowHTML = r => `
     <tr>

@@ -170,3 +170,17 @@ input::placeholder { color: var(--text-faint); }
 .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #1b6cff); }
 .note { font-size: 12.5px; color: var(--text-dim); background: rgba(60,224,255,.05); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
 .range { width: 160px; }
+
+/* Vertical key/value pane (label left, value right) */
+.kv { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 9px 2px; border-bottom: 1px solid rgba(255,255,255,.05); }
+.kv:last-child { border-bottom: none; }
+.kv-k { color: var(--text-faint); font-size: 12px; letter-spacing: .4px; text-transform: uppercase; flex: 0 0 auto; }
+.kv-v { color: var(--text); font-size: 14px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Leaflet dark-theme tweaks */
+.leaflet-container { background: #0a0f1a; font-family: var(--sans); }
+.leaflet-control-attribution { background: rgba(7,11,19,.7); color: var(--text-faint); }
+.leaflet-control-attribution a { color: var(--text-dim); }
+.leaflet-bar a { background: var(--panel-solid); color: var(--text); border-color: var(--border); }
+.leaflet-bar a:hover { background: #16203200; color: var(--accent); }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--panel-solid); color: var(--text); }

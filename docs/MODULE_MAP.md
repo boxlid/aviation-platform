@@ -50,6 +50,11 @@ instead of re-reading code. Keep it in sync when interfaces change.
 ### `app/ingest_airports.py` — OurAirports (public domain)
 - `ingest_airports(log, run_id) -> dict` — download airports.csv + runways.csv → `airports`, `runways`
 
+### `app/ingest_faa_airports.py` — FAA NASR APT (fixed-width)
+- `ingest_faa_airports(log, run_id) -> dict` — current cycle → APT.zip → `faa_airport_detail` (owner/manager contacts)
+- `current_cycle(log)` · `_get(url, tries)` (browser UA + retry through FAA Akamai 503s)
+- NOTE: NASR based-aircraft fields parse but are empty at the source (deprecated → gov-only BasedAircraft.com).
+
 ## Integrations
 
 ### `app/gmail.py` — Gmail OAuth + ingest + search
@@ -65,11 +70,12 @@ instead of re-reading code. Keep it in sync when interfaces change.
 | `faa_part135` | FAA Part 135 xlsx | weekly | `operators`, `part135_aircraft` |
 | `t100_segment` | BTS T-100 (browser) | weekly | `t100_segment` |
 | `ourairports` | OurAirports CSVs | weekly | `airports`, `runways` |
+| `faa_airports` | FAA NASR APT | weekly | `faa_airport_detail` (contacts) |
 | `gmail_ingest` | Gmail API | 15 min | `emails` |
 
 ## Database objects
 **Tables:** `operators`, `part135_aircraft`, `faa_registry`, `aircraft_ref`, `t100_segment`,
-`airports`, `runways`, `emails`, `services`, `service_runs`, `service_logs`, `notifications`.
+`airports`, `runways`, `faa_airport_detail`, `emails`, `services`, `service_runs`, `service_logs`, `notifications`.
 **Views:** `charter_fleet` (tail→operator→aircraft→Mode S hex), `charter_routes` (T-100 CLASS L/P = charter),
 `airport_capability` (airport + longest runway / runway count).
 

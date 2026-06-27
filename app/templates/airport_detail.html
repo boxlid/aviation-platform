@@ -2,7 +2,14 @@
 {% block crumb %}<a href="/airports" class="dim">Airports</a> · detail{% endblock %}
 {% block heading %}<span id="ap-name">Airport</span>{% endblock %}
 {% block content %}
-  <div id="ap-meta" class="grid cols-4"></div>
+  <div id="ap-stats" class="grid cols-4"></div>
+
+  <div class="grid cols-2" style="margin-top:16px; align-items:stretch">
+    <div class="panel pad"><div id="ap-info"></div></div>
+    <div class="panel" style="overflow:hidden; min-height:360px">
+      <div id="map" style="height:100%; min-height:360px; background:#0a0f1a"></div>
+    </div>
+  </div>
 
   <div class="section-title">Runways <span class="line"></span></div>
   <div class="panel">
@@ -19,4 +26,8 @@
     </table>
   </div>
 {% endblock %}
-{% block script %}<script>SF.airportDetail("{{ ident }}");</script>{% endblock %}
+{% block script %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>SF.airportDetail("{{ ident }}");</script>
+{% endblock %}

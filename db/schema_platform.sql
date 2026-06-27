@@ -182,6 +182,31 @@ LEFT JOIN runways r ON r.airport_ident = a.ident
 GROUP BY a.ident, a.name, a.type, a.iso_country, a.iso_region, a.municipality,
          a.iata_code, a.icao_code, a.local_code, a.latitude_deg, a.longitude_deg, a.elevation_ft;
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- FAA airport detail (NASR APT base record) — based-aircraft counts + owner contacts.
+-- location_id joins to airports.local_code for US airports.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS faa_airport_detail (
+  location_id      text PRIMARY KEY,        -- FAA location identifier, e.g. 'TEB'
+  site_number      text,
+  facility_name    text,
+  city             text,
+  state            text,
+  owner_name       text,
+  owner_phone      text,
+  manager_name     text,
+  manager_phone    text,
+  based_single     integer,
+  based_multi      integer,
+  based_jet        integer,                 -- the "based private jets" count
+  based_heli       integer,
+  based_glider     integer,
+  based_military   integer,
+  based_ultralight integer,
+  based_total      integer
+);
+CREATE INDEX IF NOT EXISTS idx_faa_apt_jet ON faa_airport_detail(based_jet DESC);
+
 -- Charter (non-scheduled civilian) segments only.
 CREATE OR REPLACE VIEW charter_routes AS
 SELECT year, month, unique_carrier, carrier_name, origin, origin_city, origin_state,
