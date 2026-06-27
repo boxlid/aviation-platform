@@ -183,8 +183,12 @@ input::placeholder { color: var(--text-faint); }
 /* Vertical key/value pane (label left, value right) */
 .kv { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 9px 2px; border-bottom: 1px solid rgba(255,255,255,.05); }
 .kv:last-child { border-bottom: none; }
-.kv-k { color: var(--text-faint); font-size: 12px; letter-spacing: .4px; text-transform: uppercase; flex: 0 0 auto; }
-.kv-v { color: var(--text); font-size: 14px; text-align: right; font-variant-numeric: tabular-nums; }
+.kv-k { color: var(--text-faint); font-size: 11px; letter-spacing: .4px; text-transform: uppercase; flex: 0 0 auto; }
+.kv-v { color: var(--text); font-size: 13.5px; text-align: right; font-variant-numeric: tabular-nums; }
+/* Two-column compact grid for detail panes */
+.kv-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 30px; }
+.kv-grid .kv { padding: 7px 2px; }
+@media (max-width: 760px) { .kv-grid { grid-template-columns: 1fr; } }
 
 /* Weather report */
 .wx-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
@@ -199,8 +203,8 @@ input::placeholder { color: var(--text-faint); }
 
 /* Leaflet dark-theme tweaks */
 .leaflet-container { background: #0a0f1a; font-family: var(--sans); }
-/* CARTO dark tiles are very dark — brighten them so the map is legible */
-.leaflet-tile { filter: brightness(1.85) contrast(0.92) saturate(1.15); }
+/* Voyager basemap — light & readable; mild mute so it sits in the dark theme */
+.leaflet-tile { filter: brightness(0.96) saturate(0.95); }
 .leaflet-control-attribution { background: rgba(7,11,19,.7); color: var(--text-faint); }
 .leaflet-control-attribution a { color: var(--text-dim); }
 .leaflet-bar a { background: var(--panel-solid); color: var(--text); border-color: var(--border); }

@@ -286,20 +286,24 @@ SF.airportDetail = async (ident) => {
   // Vertical key/value pane — label left, value right
   const kv = (k, v) => (v == null || v === '' ) ? '' : `<div class="kv"><span class="kv-k">${k}</span><span class="kv-v">${v}</span></div>`;
   const kvLink = (k, url) => url ? `<div class="kv"><span class="kv-k">${k}</span><span class="kv-v"><a href="${esc(url)}" target="_blank" rel="noopener">open ↗</a></span></div>` : '';
-  $('#ap-info').innerHTML =
-    kv('IATA', esc(a.iata_code)) + kv('ICAO', esc(a.icao_code)) + kv('Ident', esc(a.ident)) +
-    kv('Local code', esc(a.local_code)) + kv('GPS code', esc(a.gps_code)) +
+  // Drop redundant codes (Ident/Local/GPS that just duplicate IATA/ICAO), render as a compact 2-col grid
+  const codes = new Set([a.iata_code, a.icao_code].filter(Boolean));
+  const extra = [['Ident', a.ident], ['Local', a.local_code], ['GPS', a.gps_code]].filter(([k, v]) => v && !codes.has(v));
+  $('#ap-info').innerHTML = '<div class="kv-grid">' +
+    kv('IATA', esc(a.iata_code)) + kv('ICAO', esc(a.icao_code)) +
+    extra.map(([k, v]) => kv(k, esc(v))).join('') +
     kv('City', esc(titleCase(a.municipality))) + kv('Region', esc(a.iso_region)) + kv('Country', esc(a.iso_country)) +
     kv('Coordinates', esc(coords)) + kv('Elevation', a.elevation_ft != null ? fmtNum(a.elevation_ft) + ' ft' : '') +
-    kv('Scheduled service', a.scheduled_service ? 'Yes' : 'No') +
+    kv('Scheduled', a.scheduled_service ? 'Yes' : 'No') +
     (faa && faa.owner_name ? kv('Owner', esc(titleCase(faa.owner_name))) + kv('Owner phone', esc(faa.owner_phone)) : '') +
     (faa && faa.manager_name ? kv('Manager', esc(titleCase(faa.manager_name))) + kv('Manager phone', esc(faa.manager_phone)) : '') +
-    kvLink('Website', a.home_link) + kvLink('Wikipedia', a.wikipedia_link);
+    kvLink('Website', a.home_link) + kvLink('Wikipedia', a.wikipedia_link) +
+    '</div>';
 
   // Map (Leaflet + CARTO dark tiles — no API key)
   if (lat != null && lon != null && window.L) {
     const map = L.map('map', { zoomControl: true, attributionControl: true }).setView([+lat, +lon], 12);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       maxZoom: 19, attribution: '© OpenStreetMap © CARTO'
     }).addTo(map);
     L.circleMarker([+lat, +lon], { radius: 8, color: '#3ce0ff', fillColor: '#3ce0ff', fillOpacity: 0.55, weight: 2 })
