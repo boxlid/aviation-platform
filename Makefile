@@ -1,26 +1,21 @@
 PG_BIN := /opt/homebrew/opt/postgresql@17/bin
-PY := ingest/.venv/bin/python
-PIP := ingest/.venv/bin/pip
+PY := .venv/bin/python
+PIP := .venv/bin/pip
 export PATH := $(PG_BIN):$(PATH)
 
-.PHONY: setup download load ingest db-shell clean
+.PHONY: setup serve seed db-shell
 
-setup:                ## create venv + install ingest deps
-	python3 -m venv ingest/.venv
+setup:                ## create venv + install all deps
+	python3 -m venv .venv
 	$(PIP) install -q -U pip
-	$(PIP) install -q -r ingest/requirements.txt
-	@echo "venv ready: $(PY)"
+	$(PIP) install -q -r requirements.txt
+	@echo "ready: $(PY)"
 
-download:             ## fetch FAA Part 135 + Releasable registry into data/raw/
-	$(PY) ingest/download_faa.py
+serve:                ## run the Sonic Flight app (http://localhost:8000)
+	$(PY) -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-load:                 ## apply schema + load Postgres + report
-	$(PY) ingest/load.py
-
-ingest: download load  ## full refresh: download then load
+seed:                 ## run all FAA ingestion services once to populate data
+	$(PY) -c "from app import db, scheduler, services; db.init_pool(); db.apply_schema('db/schema.sql','db/schema_platform.sql'); services.sync_registry(); [print(services.run_service(n)) for n in ('faa_part135','faa_registry','faa_reference')]"
 
 db-shell:             ## open psql on the aviation db
 	$(PG_BIN)/psql aviation
-
-clean:                ## remove downloaded raw data
-	rm -rf data/raw

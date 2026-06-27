@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block crumb %}Part 135 certificate holders{% endblock %}
+{% block content %}
+  <div class="toolbar">
+    <input id="q" class="search" placeholder="Search operators…" autofocus />
+    <span id="count" class="muted"></span>
+  </div>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Operator</th><th style="text-align:right">Fleet</th><th style="text-align:right">Jets</th><th style="text-align:right">Turboprop</th><th style="text-align:right">Heli</th><th>FSDO</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+{% endblock %}
+{% block script %}<script>SF.operators();</script>{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block crumb %}Charter fleet · tail → operator → aircraft{% endblock %}
+{% block content %}
+  <div class="toolbar">
+    <input id="q" class="search" placeholder="Search tail, operator, make/model…" autofocus />
+    <select id="cat">
+      <option value="">All categories</option>
+      <option>Jet</option><option>Turboprop</option><option>Helicopter</option><option>Piston</option><option>Other</option>
+    </select>
+    <label class="btn ghost"><input type="checkbox" id="adsb" style="margin-right:7px" />ADS-B ready</label>
+    <span id="count" class="muted"></span>
+  </div>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Tail</th><th>Category</th><th>Aircraft</th><th>Operator</th><th>Mode S</th><th>Registered owner</th><th>FSDO</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+{% endblock %}
+{% block script %}<script>SF.fleet();</script>{% endblock %}

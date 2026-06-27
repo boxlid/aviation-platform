@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block crumb %}Settings · background services{% endblock %}
+{% block content %}
+  <div class="note" style="margin-bottom:16px">
+    Background services that ingest and refresh the platform's data. Adjust each service's run interval, pause or restart it, and open it to view live logs.
+  </div>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Service</th><th>Status</th><th>Interval</th><th>Last run</th><th>Controls</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+{% endblock %}
+{% block script %}<script>SF.services();</script>{% endblock %}

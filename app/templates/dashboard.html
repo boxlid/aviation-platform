@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block crumb %}Overview{% endblock %}
+{% block content %}
+  <div id="stats" class="grid cols-4"></div>
+
+  <div class="grid cols-2" style="margin-top:18px">
+    <div class="panel pad">
+      <div class="section-title" style="margin-top:0">Fleet by category <span class="line"></span></div>
+      <div id="cats"></div>
+    </div>
+    <div class="panel pad">
+      <div class="section-title" style="margin-top:0">Service health <span class="line"></span></div>
+      <div id="svc-health"></div>
+    </div>
+  </div>
+
+  <div class="section-title">Top operators by fleet size <span class="line"></span></div>
+  <div class="panel">
+    <table><thead><tr><th>#</th><th>Operator</th><th style="text-align:right">Aircraft</th></tr></thead>
+    <tbody id="topops"></tbody></table>
+  </div>
+{% endblock %}
+{% block script %}<script>SF.dashboard();</script>{% endblock %}
