@@ -398,7 +398,8 @@ SF.routeDetail = async () => {
     <tr><td>${esc(m.period)}</td><td class="num"><b>${fmtNum(Math.round(m.departures))}</b></td>
     <td class="num dim">${fmtNum(Math.round(m.seats))}</td><td class="num dim">${fmtNum(Math.round(m.passengers))}</td></tr>`);
   SF.sortable($('#rt-aircraft'), d.aircraft, a => `
-    <tr><td class="tail">${esc(a.aircraft_type)}</td><td class="num"><b>${fmtNum(Math.round(a.departures))}</b></td>
+    <tr><td>${esc(a.aircraft_name || '—')}</td><td class="tail">${esc(a.aircraft_type)}</td>
+    <td class="num"><b>${fmtNum(Math.round(a.departures))}</b></td>
     <td class="num dim">${fmtNum(Math.round(a.passengers))}</td></tr>`);
 };
 

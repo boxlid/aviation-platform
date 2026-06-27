@@ -207,6 +207,12 @@ CREATE TABLE IF NOT EXISTS faa_airport_detail (
 );
 CREATE INDEX IF NOT EXISTS idx_faa_apt_jet ON faa_airport_detail(based_jet DESC);
 
+-- BTS aircraft-type code → human-readable description (L_AIRCRAFT_TYPE lookup).
+CREATE TABLE IF NOT EXISTS aircraft_type_ref (
+  code        text PRIMARY KEY,
+  description text
+);
+
 -- Charter (non-scheduled civilian) segments only.
 CREATE OR REPLACE VIEW charter_routes AS
 SELECT year, month, unique_carrier, carrier_name, origin, origin_city, origin_state,

@@ -202,8 +202,10 @@ def route_detail(carrier: str, origin: str, dest: str):
         f"SELECT year, month, sum(departures) departures, sum(seats) seats, sum(passengers) passengers "
         f"FROM charter_routes {where} GROUP BY year, month ORDER BY year, month", args)
     aircraft = db.query(
-        f"SELECT aircraft_type, sum(departures) departures, sum(passengers) passengers "
-        f"FROM charter_routes {where} GROUP BY aircraft_type ORDER BY departures DESC", args)
+        f"SELECT aircraft_type, atr.description AS aircraft_name, "
+        f"sum(departures) departures, sum(passengers) passengers "
+        f"FROM charter_routes LEFT JOIN aircraft_type_ref atr ON atr.code = lpad(aircraft_type, 3, '0') "
+        f"{where} GROUP BY aircraft_type, atr.description ORDER BY departures DESC", args)
 
     def airport(code):
         return db.query_one("SELECT ident, name FROM airports WHERE iata_code=%s OR local_code=%s "

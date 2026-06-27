@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Callable
 
-from . import db, ingest_airports, ingest_faa, ingest_faa_airports, ingest_t100
+from . import db, ingest_aircraft_types, ingest_airports, ingest_faa, ingest_faa_airports, ingest_t100
 from .logs import get_logger
 
 
@@ -45,6 +45,9 @@ SERVICES: list[ServiceSpec] = [
     ServiceSpec("t100_segment", "BTS T-100 Segment",
                 "Carrier × route × aircraft monthly traffic; CLASS L/P = non-scheduled (charter) flights. Source: BTS T-100 Domestic Segment (headless-browser download).",
                 "ingestion", WEEK, ingest_t100.ingest_t100),
+    ServiceSpec("bts_aircraft_types", "BTS Aircraft Types",
+                "Aircraft-type code → human-readable name (decodes T-100 aircraft types). Source: BTS L_AIRCRAFT_TYPE lookup.",
+                "ingestion", WEEK, ingest_aircraft_types.ingest_aircraft_types),
     ServiceSpec("ourairports", "OurAirports (Airports + Runways)",
                 "Global airports and runways (location, type, runway length/surface). Source: OurAirports, public domain.",
                 "ingestion", WEEK, ingest_airports.ingest_airports),
