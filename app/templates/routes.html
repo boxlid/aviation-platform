@@ -2,7 +2,7 @@
 {% block crumb %}BTS T-100 · non-scheduled (charter) segments{% endblock %}
 {% block content %}
   <div class="note" style="margin-bottom:16px">
-    Actual flown charter traffic from BTS T-100 (CLASS L/P = non-scheduled civilian). Departures and passengers are summed across the loaded months, by carrier and city-pair.
+    Actual flown charter traffic from BTS T-100 (CLASS L/P = non-scheduled civilian). Departures and passengers are summed across the loaded months, by carrier and city-pair. Click a carrier to open the route detail.
   </div>
   <div class="toolbar">
     <input id="q" class="search" placeholder="Search carrier…" autofocus />
@@ -10,11 +10,20 @@
     <input id="dest" placeholder="Dest (e.g. PBI)" style="width:140px" />
     <span id="count" class="muted"></span>
   </div>
-  <div class="panel">
-    <table>
-      <thead><tr><th>Carrier</th><th>Origin</th><th>Destination</th>
-        <th style="text-align:right">Departures</th><th style="text-align:right">Passengers</th>
-        <th style="text-align:right">Miles</th><th style="text-align:right">Months</th></tr></thead>
+  <div class="panel scrollbox">
+    <table class="sortable dense" id="tbl">
+      <thead><tr>
+        <th data-key="carrier_name" data-type="str">Carrier</th>
+        <th data-key="origin" data-type="str">Origin</th>
+        <th data-key="origin_city" data-type="str">Origin City</th>
+        <th data-key="origin_state" data-type="str">Origin St</th>
+        <th data-key="dest" data-type="str">Dest</th>
+        <th data-key="dest_city" data-type="str">Dest City</th>
+        <th data-key="dest_state" data-type="str">Dest St</th>
+        <th data-key="departures" data-type="num" class="num">Departures</th>
+        <th data-key="passengers" data-type="num" class="num">Passengers</th>
+        <th data-key="distance" data-type="num" class="num">Miles</th>
+      </tr></thead>
       <tbody id="tbody"></tbody>
     </table>
   </div>

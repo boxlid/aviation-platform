@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block crumb %}<a href="/routes" class="dim">Charter Routes</a> · detail{% endblock %}
+{% block heading %}<span id="rt-title">Route</span>{% endblock %}
+{% block content %}
+  <p id="rt-sub" class="dim" style="margin-top:0"></p>
+  <div id="rt-stats" class="grid cols-3"></div>
+
+  <div class="grid cols-2" style="margin-top:18px; align-items:start">
+    <div>
+      <div class="section-title" style="margin-top:0">Monthly traffic <span class="line"></span></div>
+      <div class="panel">
+        <table class="sortable" id="rt-monthly">
+          <thead><tr>
+            <th data-key="period" data-type="str">Month</th>
+            <th data-key="departures" data-type="num" class="num">Departures</th>
+            <th data-key="seats" data-type="num" class="num">Seats</th>
+            <th data-key="passengers" data-type="num" class="num">Passengers</th>
+          </tr></thead><tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="section-title" style="margin-top:0">Aircraft types (BTS code) <span class="line"></span></div>
+      <div class="panel">
+        <table class="sortable" id="rt-aircraft">
+          <thead><tr>
+            <th data-key="aircraft_type" data-type="str">Type</th>
+            <th data-key="departures" data-type="num" class="num">Departures</th>
+            <th data-key="passengers" data-type="num" class="num">Passengers</th>
+          </tr></thead><tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block script %}<script>SF.routeDetail();</script>{% endblock %}

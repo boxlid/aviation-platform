@@ -124,6 +124,11 @@ table.sortable th[data-dir="asc"]::after { content: " ▲"; color: var(--accent)
 table.sortable th[data-dir="desc"]::after { content: " ▼"; color: var(--accent); font-size: 9px; }
 tbody td a { color: var(--accent); }
 tbody td a:hover { text-decoration: underline; }
+/* Bounded, scrollable list with sticky header (keeps long tables from filling the page) */
+.scrollbox { max-height: calc(100vh - 230px); overflow: auto; }
+/* Compact density */
+table.dense thead th { padding: 8px 12px; }
+table.dense tbody td { padding: 6px 12px; font-size: 13px; }
 .tail { font-family: var(--mono); color: var(--accent); font-weight: 600; }
 .hex { font-family: var(--mono); color: var(--gold); font-size: 12.5px; }
 .muted { color: var(--text-faint); }
@@ -190,6 +195,8 @@ input::placeholder { color: var(--text-faint); }
 
 /* Leaflet dark-theme tweaks */
 .leaflet-container { background: #0a0f1a; font-family: var(--sans); }
+/* CARTO dark tiles are very dark — brighten them so the map is legible */
+.leaflet-tile { filter: brightness(1.85) contrast(0.92) saturate(1.15); }
 .leaflet-control-attribution { background: rgba(7,11,19,.7); color: var(--text-faint); }
 .leaflet-control-attribution a { color: var(--text-dim); }
 .leaflet-bar a { background: var(--panel-solid); color: var(--text); border-color: var(--border); }

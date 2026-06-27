@@ -29,6 +29,7 @@ function ago(ts) {
 const dt = ts => ts ? new Date(ts).toLocaleString() : '—';
 const catBadge = c => c ? `<span class="badge cat-${esc(c)}">${esc(c)}</span>` : '<span class="muted">—</span>';
 const cleanType = t => !t ? '' : t.replace('_airport', '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+const titleCase = s => !s ? s : String(s).toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
 const statusPill = s => `<span class="status-pill st-${esc(s)}"><span class="dot-s"></span>${esc(s)}</span>`;
 
 /* ── Dashboard ─────────────────────────────────────────────── */
@@ -236,11 +237,11 @@ SF.airportDetail = async (ident) => {
   $('#ap-info').innerHTML =
     kv('IATA', esc(a.iata_code)) + kv('ICAO', esc(a.icao_code)) + kv('Ident', esc(a.ident)) +
     kv('Local code', esc(a.local_code)) + kv('GPS code', esc(a.gps_code)) +
-    kv('City', esc(a.municipality)) + kv('Region', esc(a.iso_region)) + kv('Country', esc(a.iso_country)) +
+    kv('City', esc(titleCase(a.municipality))) + kv('Region', esc(a.iso_region)) + kv('Country', esc(a.iso_country)) +
     kv('Coordinates', esc(coords)) + kv('Elevation', a.elevation_ft != null ? fmtNum(a.elevation_ft) + ' ft' : '') +
     kv('Scheduled service', a.scheduled_service ? 'Yes' : 'No') +
-    (faa && faa.owner_name ? kv('Owner', esc(faa.owner_name)) + kv('Owner phone', esc(faa.owner_phone)) : '') +
-    (faa && faa.manager_name ? kv('Manager', esc(faa.manager_name)) + kv('Manager phone', esc(faa.manager_phone)) : '') +
+    (faa && faa.owner_name ? kv('Owner', esc(titleCase(faa.owner_name))) + kv('Owner phone', esc(faa.owner_phone)) : '') +
+    (faa && faa.manager_name ? kv('Manager', esc(titleCase(faa.manager_name))) + kv('Manager phone', esc(faa.manager_phone)) : '') +
     kvLink('Website', a.home_link) + kvLink('Wikipedia', a.wikipedia_link);
 
   // Map (Leaflet + CARTO dark tiles — no API key)
@@ -344,27 +345,61 @@ SF.airportWeather = async (ident) => {
 
 /* ── Charter routes (T-100) ────────────────────────────────── */
 SF.routes = async () => {
+  const tbl = $('#tbl');
+  const routeUrl = r => `/route?carrier=${encodeURIComponent(r.unique_carrier)}&origin=${encodeURIComponent(r.origin)}&dest=${encodeURIComponent(r.dest)}`;
+  const rowHTML = r => `
+    <tr>
+      <td><a href="${routeUrl(r)}">${esc(r.carrier_name)}</a></td>
+      <td><a class="tail" href="${routeUrl(r)}">${esc(r.origin)}</a></td>
+      <td>${esc(r.origin_city || '')}</td>
+      <td class="muted">${esc(r.origin_state || '')}</td>
+      <td><a class="tail" href="${routeUrl(r)}">${esc(r.dest)}</a></td>
+      <td>${esc(r.dest_city || '')}</td>
+      <td class="muted">${esc(r.dest_state || '')}</td>
+      <td class="num"><b>${fmtNum(Math.round(r.departures))}</b></td>
+      <td class="num dim">${fmtNum(Math.round(r.passengers))}</td>
+      <td class="num muted">${fmtNum(r.distance)}</td>
+    </tr>`;
+  let sorter = null;
   const run = async () => {
-    const q = $('#q').value, origin = $('#origin').value, dest = $('#dest').value;
-    const params = new URLSearchParams({ limit: 300 });
-    if (q) params.set('q', q);
-    if (origin) params.set('origin', origin);
-    if (dest) params.set('dest', dest);
+    const params = new URLSearchParams({ limit: 500 });
+    if ($('#q').value) params.set('q', $('#q').value);
+    if ($('#origin').value) params.set('origin', $('#origin').value);
+    if ($('#dest').value) params.set('dest', $('#dest').value);
     const rows = await getJSON('/api/routes?' + params);
-    $('#count').textContent = rows.length + (rows.length === 300 ? '+' : '') + ' routes';
-    $('#tbody').innerHTML = rows.length ? rows.map(r => `
-      <tr>
-        <td>${esc(r.carrier_name)}</td>
-        <td class="tail">${esc(r.origin)}</td>
-        <td><span class="tail">${esc(r.dest)}</span> <span class="muted" style="font-size:12px">${esc(r.dest_city || '')}</span></td>
-        <td style="text-align:right"><b>${fmtNum(Math.round(r.departures))}</b></td>
-        <td style="text-align:right" class="dim">${fmtNum(Math.round(r.passengers))}</td>
-        <td style="text-align:right" class="muted">${fmtNum(r.distance)}</td>
-        <td style="text-align:right" class="muted">${fmtNum(r.months)}</td>
-      </tr>`).join('') : '<tr><td colspan="7" class="empty">No charter segments — run the BTS T-100 Segment service.</td></tr>';
+    $('#count').textContent = rows.length + (rows.length === 500 ? '+' : '') + ' routes';
+    sorter = sorter ? (sorter.update(rows), sorter) : SF.sortable(tbl, rows, rowHTML);
   };
   ['#q', '#origin', '#dest'].forEach(s => $(s).addEventListener('input', debounce(run, 300)));
   run();
+};
+
+/* ── Route detail (T-100) ──────────────────────────────────── */
+SF.routeDetail = async () => {
+  const p = new URLSearchParams(location.search);
+  const d = await getJSON('/api/route?carrier=' + encodeURIComponent(p.get('carrier') || '') +
+    '&origin=' + encodeURIComponent(p.get('origin') || '') + '&dest=' + encodeURIComponent(p.get('dest') || ''));
+  if (!d || !d.summary) { $('#rt-title').textContent = 'Route not found'; return; }
+  const s = d.summary;
+  const oLink = d.origin_airport ? `<a href="/airport/${encodeURIComponent(d.origin_airport.ident)}">${esc(d.origin)}</a>` : esc(d.origin);
+  const dLink = d.dest_airport ? `<a href="/airport/${encodeURIComponent(d.dest_airport.ident)}">${esc(d.dest)}</a>` : esc(d.dest);
+  $('#rt-title').innerHTML = `${esc(s.carrier_name)} &nbsp;·&nbsp; ${oLink} → ${dLink}`;
+  $('#rt-sub').innerHTML = `${esc(s.origin_city || '')}, ${esc(s.origin_state || '')} → ${esc(s.dest_city || '')}, ${esc(s.dest_state || '')}`;
+  const cards = [
+    ['Departures', fmtNum(Math.round(s.departures))], ['Passengers', fmtNum(Math.round(s.passengers))],
+    ['Seats', fmtNum(Math.round(s.seats))], ['Distance', s.distance ? fmtNum(s.distance) + ' mi' : '—'],
+    ['Months active', fmtNum(s.months)], ['Avg pax/dep', s.departures ? (s.passengers / s.departures).toFixed(1) : '—'],
+  ];
+  $('#rt-stats').innerHTML = cards.map(([k, v]) =>
+    `<div class="panel stat"><div class="glow"></div><div class="k">${k}</div><div class="v" style="font-size:22px">${esc(v)}</div></div>`).join('');
+
+  const M = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  SF.sortable($('#rt-monthly'), d.monthly.map(m => ({ ...m, period: `${M[m.month]} ${m.year}` })), m => `
+    <tr><td>${esc(m.period)}</td><td class="num"><b>${fmtNum(Math.round(m.departures))}</b></td>
+    <td class="num dim">${fmtNum(Math.round(m.seats))}</td><td class="num dim">${fmtNum(Math.round(m.passengers))}</td></tr>`);
+  SF.sortable($('#rt-aircraft'), d.aircraft, a => `
+    <tr><td class="tail">${esc(a.aircraft_type)}</td><td class="num"><b>${fmtNum(Math.round(a.departures))}</b></td>
+    <td class="num dim">${fmtNum(Math.round(a.passengers))}</td></tr>`);
 };
 
 /* ── Emails ────────────────────────────────────────────────── */

@@ -85,12 +85,12 @@ instead of re-reading code. Keep it in sync when interfaces change.
 ## API routes (`app/api.py`, prefix `/api`)
 - Notifications: `GET /notifications`, `POST /notifications/read`
 - Services: `GET /services`, `GET /services/{name}`, `POST /services/{name}/run|pause|resume`, `PATCH /services/{name}/interval`, `GET /services/{name}/runs|logs`, `GET /logs`
-- Fleet/operators: `GET /fleet`, `GET /aircraft/{n}`, `GET /operators`, `GET /operators/{designator}`, `GET /fsdo?name=`, `GET /routes`, `GET /airports`, `GET /airports/{ident}`, `GET /airports/{ident}/weather`, `GET /stats`
+- Fleet/operators: `GET /fleet`, `GET /aircraft/{n}`, `GET /operators`, `GET /operators/{designator}`, `GET /fsdo?name=`, `GET /routes`, `GET /route`, `GET /airports`, `GET /airports/{ident}`, `GET /airports/{ident}/weather`, `GET /stats`
 - Emails/Gmail: `GET /emails`, `GET /gmail/status|connect|callback`, `POST /gmail/disconnect`
 
 ## Pages (`app/main.py` → `app/templates/`)
 `/` dashboard · `/fleet` · `/operators` · `/operator/{designator}` · `/fsdo?name=` ·
-`/routes` · `/airports` · `/airport/{ident}` · `/emails` · `/settings/services` · `/settings/services/{name}`
+`/routes` · `/route` · `/airports` · `/airport/{ident}` · `/emails` · `/settings/services` · `/settings/services/{name}`
 
 ## Deployment
 `deploy/com.sonicflights.app.plist` + `deploy/install-autostart.sh` — launchd user agent

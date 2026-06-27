@@ -165,9 +165,10 @@ def operators(q: Optional[str] = None, limit: int = 100):
 
 
 @router.get("/routes")
-def routes(q: Optional[str] = None, origin: Optional[str] = None, dest: Optional[str] = None, limit: int = 200):
+def routes(q: Optional[str] = None, origin: Optional[str] = None, dest: Optional[str] = None, limit: int = 300):
     sql = """
-      SELECT carrier_name, origin, origin_city, dest, dest_city,
+      SELECT unique_carrier, carrier_name, origin, split_part(origin_city, ',', 1) AS origin_city, origin_state,
+             dest, split_part(dest_city, ',', 1) AS dest_city, dest_state,
              sum(departures) AS departures, sum(passengers) AS passengers,
              round(max(distance)) AS distance, count(DISTINCT (year, month)) AS months
       FROM charter_routes WHERE 1=1
@@ -179,10 +180,37 @@ def routes(q: Optional[str] = None, origin: Optional[str] = None, dest: Optional
         sql += " AND origin = %s"; params.append(origin.upper())
     if dest:
         sql += " AND dest = %s"; params.append(dest.upper())
-    sql += (" GROUP BY carrier_name, origin, origin_city, dest, dest_city "
+    sql += (" GROUP BY unique_carrier, carrier_name, origin, origin_city, origin_state, dest, dest_city, dest_state "
             " HAVING sum(departures) > 0 ORDER BY departures DESC LIMIT %s")
-    params.append(min(limit, 500))
+    params.append(min(limit, 800))
     return db.query(sql, params)
+
+
+@router.get("/route")
+def route_detail(carrier: str, origin: str, dest: str):
+    args = (carrier, origin.upper(), dest.upper())
+    where = "WHERE unique_carrier=%s AND origin=%s AND dest=%s"
+    summary = db.query_one(
+        f"SELECT carrier_name, split_part(origin_city, ',', 1) AS origin_city, origin_state, "
+        f"split_part(dest_city, ',', 1) AS dest_city, dest_state, "
+        f"sum(departures) departures, sum(passengers) passengers, sum(seats) seats, "
+        f"round(max(distance)) distance, count(DISTINCT (year,month)) months "
+        f"FROM charter_routes {where} GROUP BY carrier_name, origin_city, origin_state, dest_city, dest_state", args)
+    if not summary:
+        return None
+    monthly = db.query(
+        f"SELECT year, month, sum(departures) departures, sum(seats) seats, sum(passengers) passengers "
+        f"FROM charter_routes {where} GROUP BY year, month ORDER BY year, month", args)
+    aircraft = db.query(
+        f"SELECT aircraft_type, sum(departures) departures, sum(passengers) passengers "
+        f"FROM charter_routes {where} GROUP BY aircraft_type ORDER BY departures DESC", args)
+
+    def airport(code):
+        return db.query_one("SELECT ident, name FROM airports WHERE iata_code=%s OR local_code=%s "
+                            "ORDER BY (type='large_airport') DESC LIMIT 1", (code, code))
+    return {"carrier": carrier, "summary": summary, "origin": origin.upper(), "dest": dest.upper(),
+            "origin_airport": airport(origin.upper()), "dest_airport": airport(dest.upper()),
+            "monthly": monthly, "aircraft": aircraft}
 
 
 @router.get("/airports")

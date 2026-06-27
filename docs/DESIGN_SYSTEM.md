@@ -26,7 +26,7 @@ button markup. All styles live in `app/static/css/app.css`.
 - **Buttons**: `.btn` base. Variants: `.btn.primary` (cyan, main action), `.btn.ghost` (transparent), `.btn.danger` (red on hover, destructive), `.btn.sm` (compact). One primary action per view.
 - **Badges**: `.badge` + `.cat-Jet|cat-Turboprop|cat-Helicopter|cat-Piston|cat-Other|cat-Unknown`. Aircraft category only — use `catBadge()` in JS.
 - **Status pill**: `.status-pill.st-<status>` with a `.dot-s`. Statuses: `success|running|error|paused|idle`. Use `statusPill()` in JS.
-- **Tables**: `<table>` inside a `.panel`. Sortable tables add `class="sortable"` and `th[data-key][data-type=str|num]`; wire with `SF.sortable()`. Numeric cells/headers use `.num` (right-aligned).
+- **Tables**: `<table>` inside a `.panel`. **REQUIRED: every data table is sortable on ALL column headers** — add `class="sortable"`, give every `<th>` a `data-key` + `data-type=str|num`, and wire with `SF.sortable()`. No exceptions; a data table without sortable headers is a bug. Numeric cells/headers use `.num` (right-aligned). Long lists go in a `.scrollbox` (bounded height, sticky header) and may use `.dense` for compact rows.
 - **Cell styles**: `.tail` (N-number, cyan mono), `.hex` (Mode S, gold mono), `.muted`/`.dim` (de-emphasized).
 - **Toolbar**: `.toolbar` row above a table; `.search` is the flexible search input.
 - **Note/banner**: `.note` (info callout). **Empty state**: `.empty` (centered placeholder inside tbody).
@@ -35,7 +35,7 @@ button markup. All styles live in `app/static/css/app.css`.
 
 ## Interaction rules
 - **Links inside tables** are `--accent` and underline on hover. Drill-downs (operator, FSDO) are plain `<a href>` — server-rendered pages, not modals.
-- **Sorting**: click a `th[data-key]` to sort; click again to reverse. Arrow (`▲/▼`) shows active column. All data tables should be sortable.
+- **Sorting**: click a `th[data-key]` to sort; click again to reverse. Arrow (`▲/▼`) shows active column. **All data tables MUST be sortable on every column — this is a hard requirement, not optional.**
 - **Notification dot**: never render statically. `SF.checkNotifications()` injects `.dot` into `#bell` only when `/api/notifications` reports `unread > 0`.
 - **One toolbar search per list**, debounced 300ms (`debounce()`).
 
