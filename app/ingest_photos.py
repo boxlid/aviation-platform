@@ -13,7 +13,7 @@ import requests
 from . import db
 from .config import PHOTOS_DIR
 
-UA = "SonicFlightsCharterCRM/1.0 (+https://github.com/boxlid/aviation-platform; adam@ringba.com)"
+UA = "SonicFlightsCRM/1.0 - (harrison@sonicflights.com)"
 API = "https://api.planespotters.net/pub/photos/reg/{reg}"
 H = {"User-Agent": UA, "Accept": "application/json"}
 
