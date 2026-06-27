@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Body, Query, Request
 from fastapi.responses import RedirectResponse
 
-from . import db, gmail, notifications, scheduler
+from . import db, gmail, notifications, scheduler, weather
 
 router = APIRouter(prefix="/api")
 
@@ -223,6 +223,15 @@ def airport_detail(ident: str):
             "SELECT owner_name, owner_phone, manager_name, manager_phone FROM faa_airport_detail WHERE location_id=%s",
             (ap["local_code"],))
     return {"airport": ap, "capability": cap, "runways": runways, "faa": faa}
+
+
+@router.get("/airports/{ident}/weather")
+def airport_weather(ident: str):
+    ap = db.query_one("SELECT icao_code, ident, latitude_deg, longitude_deg FROM airports WHERE ident=%s", (ident,))
+    if not ap:
+        return None
+    icao = (ap.get("icao_code") or ap["ident"]).strip()
+    return weather.report(icao, ap.get("latitude_deg"), ap.get("longitude_deg"))
 
 
 @router.get("/stats")

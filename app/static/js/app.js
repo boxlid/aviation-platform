@@ -268,6 +268,78 @@ SF.airportDetail = async (ident) => {
       <td>${r.closed ? '<span style="color:var(--bad)">Closed</span>' : '<span style="color:var(--good)">Open</span>'}</td>
     </tr>`;
   SF.sortable($('#tbl'), rwy, rowHTML);
+
+  SF.airportWeather(ident);
+};
+
+/* ── Airport weather (aviationweather.gov) ─────────────────── */
+const zulu = s => { const d = new Date(s * 1000); const p = n => String(n).padStart(2, '0'); return `${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}Z`; };
+const ceiling = clouds => {
+  const c = (clouds || []).filter(x => ['BKN', 'OVC', 'OVX'].includes(x.cover) && x.base != null);
+  return c.length ? Math.min(...c.map(x => x.base)) : null;
+};
+const cloudStr = clouds => (clouds || []).map(c => c.cover + (c.base != null ? ' ' + fmtNum(c.base) : '')).join(', ') || 'Clear';
+
+SF.airportWeather = async (ident) => {
+  const wx = $('#wx');
+  wx.innerHTML = '<div class="section-title">Weather <span class="line"></span></div><div class="panel pad muted">Loading weather…</div>';
+  const w = await getJSON('/api/airports/' + encodeURIComponent(ident) + '/weather');
+  let html = '<div class="section-title">Weather <span class="line"></span></div>';
+  if (!w || (!w.metar && !w.taf)) {
+    wx.innerHTML = html + '<div class="note">No reporting weather station at this airport.</div>';
+    return;
+  }
+  const m = w.metar;
+  if (m) {
+    const fc = m.fltCat || '—';
+    const inHg = m.altim != null ? (m.altim / 33.8639).toFixed(2) + ' inHg' : '—';
+    const ceil = ceiling(m.clouds);
+    const wind = m.wdir != null ? `${m.wdir === 0 && m.wspd ? 'VRB' : m.wdir + '°'} @ ${fmtNum(m.wspd || 0)} kt${m.wgst ? ' G' + m.wgst : ''}` : '—';
+    const cells = [
+      ['Wind', wind], ['Visibility', m.visib != null ? m.visib + ' SM' : '—'],
+      ['Ceiling', ceil != null ? fmtNum(ceil) + ' ft' : 'Unlimited'], ['Clouds', cloudStr(m.clouds)],
+      ['Temp', m.temp != null ? Math.round(m.temp) + '°C' : '—'], ['Dewpoint', m.dewp != null ? Math.round(m.dewp) + '°C' : '—'],
+      ['Altimeter', inHg],
+    ];
+    html += `<div class="panel pad wx-now">
+      <div class="wx-head">
+        <span class="fc fc-${esc(fc)}">${esc(fc)}</span>
+        <div><b>Current conditions</b><br><span class="muted" style="font-size:12px">Observed ${m.obsTime ? ago(m.obsTime * 1000) : '—'} · ${esc(m.name || ident)}</span></div>
+      </div>
+      <div class="wx-grid">${cells.map(([k, v]) => `<div><div class="kv-k">${k}</div><div class="wx-v">${esc(v)}</div></div>`).join('')}</div>
+      <div class="logs" style="margin-top:12px;max-height:none">${esc(m.rawOb || '')}</div>
+    </div>`;
+  }
+  const t = w.taf;
+  if (t) {
+    const periods = (t.fcsts || []).map(f => {
+      const chg = f.fcstChange ? esc(f.fcstChange) + (f.probability ? ' ' + f.probability + '%' : '') : 'FROM';
+      const wind = f.wdir != null ? `${f.wdir}° @ ${fmtNum(f.wspd || 0)}kt${f.wgst ? 'G' + f.wgst : ''}` : '—';
+      return `<tr><td class="muted" style="white-space:nowrap">${zulu(f.timeFrom)}–${zulu(f.timeTo)}</td>
+        <td><span class="badge">${chg}</span></td><td>${wind}</td><td>${f.visib != null ? esc(f.visib) + ' SM' : '—'}</td>
+        <td>${esc(cloudStr(f.clouds))}</td><td class="muted">${esc(f.wxString || '')}</td></tr>`;
+    }).join('');
+    html += `<div class="panel pad" style="margin-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <b>Forecast (TAF)</b><span class="muted" style="font-size:12px">Issued ${t.issueTime ? new Date(t.issueTime).toLocaleString() : '—'}</span></div>
+      <div class="logs" style="margin:10px 0;max-height:none">${esc(t.rawTAF || '')}</div>
+      <table><thead><tr><th>Period (Z)</th><th>Type</th><th>Wind</th><th>Vis</th><th>Clouds</th><th>Wx</th></tr></thead><tbody>${periods}</tbody></table>
+    </div>`;
+  }
+  if (w.hazards && w.hazards.length) {
+    html += `<div class="panel pad" style="margin-top:14px"><b>Active hazards over this airport</b>` +
+      w.hazards.map(h => `<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+        <span class="badge" style="color:var(--warn);border-color:var(--warn)">${esc(h.hazard || h.source)}</span>
+        <span class="muted" style="font-size:12px;margin-left:8px">until ${h.validTimeTo ? zulu(h.validTimeTo) : '—'}${h.altitudeLow != null ? ' · FL' + h.altitudeLow + '–' + h.altitudeHi : ''}</span>
+        <div class="logs" style="margin-top:6px;max-height:none">${esc((h.raw || '').slice(0, 400))}</div></div>`).join('') + `</div>`;
+  }
+  if (w.pireps && w.pireps.length) {
+    html += `<div class="panel pad" style="margin-top:14px"><b>Nearby pilot reports</b>` +
+      w.pireps.map(p => `<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12.5px">
+        <span class="muted">${p.obsTime ? ago(p.obsTime * 1000) : ''} · ${esc(p.acType || '')}${p.fltLvl ? ' · FL' + p.fltLvl : ''}</span>
+        <div class="hex" style="margin-top:3px">${esc(p.rawOb || '')}</div></div>`).join('') + `</div>`;
+  }
+  wx.innerHTML = html;
 };
 
 /* ── Charter routes (T-100) ────────────────────────────────── */

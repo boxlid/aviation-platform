@@ -177,6 +177,17 @@ input::placeholder { color: var(--text-faint); }
 .kv-k { color: var(--text-faint); font-size: 12px; letter-spacing: .4px; text-transform: uppercase; flex: 0 0 auto; }
 .kv-v { color: var(--text); font-size: 14px; text-align: right; font-variant-numeric: tabular-nums; }
 
+/* Weather report */
+.wx-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.fc { font-size: 18px; font-weight: 800; letter-spacing: 1px; padding: 8px 14px; border-radius: 10px; border: 1px solid; }
+.fc-VFR  { color: #3ce08a; border-color: rgba(60,224,138,.5); background: rgba(60,224,138,.1); }
+.fc-MVFR { color: #5aa9ff; border-color: rgba(90,169,255,.5); background: rgba(90,169,255,.1); }
+.fc-IFR  { color: #ff6b7d; border-color: rgba(255,107,125,.5); background: rgba(255,107,125,.1); }
+.fc-LIFR { color: #c78bff; border-color: rgba(199,139,255,.5); background: rgba(199,139,255,.12); }
+.wx-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+@media (max-width: 900px) { .wx-grid { grid-template-columns: repeat(2, 1fr); } }
+.wx-v { font-size: 16px; font-weight: 600; margin-top: 3px; }
+
 /* Leaflet dark-theme tweaks */
 .leaflet-container { background: #0a0f1a; font-family: var(--sans); }
 .leaflet-control-attribution { background: rgba(7,11,19,.7); color: var(--text-faint); }

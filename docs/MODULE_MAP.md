@@ -57,6 +57,9 @@ instead of re-reading code. Keep it in sync when interfaces change.
 
 ## Integrations
 
+### `app/weather.py` — aviationweather.gov (NOAA, free, public domain)
+- `report(icao, lat, lon) -> dict` — METAR + TAF + nearby PIREPs + SIGMET/AIRMET over the point (cached 5 min). On-demand (not a scheduled service); served by `GET /api/airports/{ident}/weather`.
+
 ### `app/gmail.py` — Gmail OAuth + ingest + search
 - `has_credentials()` · `is_connected()` · `auth_url()` · `handle_callback(full_url)` · `disconnect()`
 - `ingest_recent(log, run_id, max_results=100) -> dict` (the `gmail_ingest` service func)
@@ -82,7 +85,7 @@ instead of re-reading code. Keep it in sync when interfaces change.
 ## API routes (`app/api.py`, prefix `/api`)
 - Notifications: `GET /notifications`, `POST /notifications/read`
 - Services: `GET /services`, `GET /services/{name}`, `POST /services/{name}/run|pause|resume`, `PATCH /services/{name}/interval`, `GET /services/{name}/runs|logs`, `GET /logs`
-- Fleet/operators: `GET /fleet`, `GET /aircraft/{n}`, `GET /operators`, `GET /operators/{designator}`, `GET /fsdo?name=`, `GET /routes`, `GET /airports`, `GET /airports/{ident}`, `GET /stats`
+- Fleet/operators: `GET /fleet`, `GET /aircraft/{n}`, `GET /operators`, `GET /operators/{designator}`, `GET /fsdo?name=`, `GET /routes`, `GET /airports`, `GET /airports/{ident}`, `GET /airports/{ident}/weather`, `GET /stats`
 - Emails/Gmail: `GET /emails`, `GET /gmail/status|connect|callback`, `POST /gmail/disconnect`
 
 ## Pages (`app/main.py` → `app/templates/`)
