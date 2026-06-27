@@ -53,6 +53,9 @@ instead of re-reading code. Keep it in sync when interfaces change.
 ### `app/ingest_aircraft_types.py` — BTS L_AIRCRAFT_TYPE lookup
 - `ingest_aircraft_types(log, run_id) -> dict` — code → name → `aircraft_type_ref` (decodes T-100 aircraft types; lookup param is ROT13-encoded).
 
+### `app/ingest_photos.py` — Planespotters aircraft photos
+- `ingest_photos(log, run_id, limit=400, delay=0.4) -> dict` — fetch by tail, download large thumbnail to `data/photos/`, record in `aircraft_photos`. Needs a descriptive contact User-Agent. Served at `/photos/<tail>.jpg`.
+
 ### `app/ingest_faa_airports.py` — FAA NASR APT (fixed-width)
 - `ingest_faa_airports(log, run_id) -> dict` — current cycle → APT.zip → `faa_airport_detail` (owner/manager contacts)
 - `current_cycle(log)` · `_get(url, tries)` (browser UA + retry through FAA Akamai 503s)
@@ -78,11 +81,12 @@ instead of re-reading code. Keep it in sync when interfaces change.
 | `bts_aircraft_types` | BTS L_AIRCRAFT_TYPE | weekly | `aircraft_type_ref` |
 | `ourairports` | OurAirports CSVs | weekly | `airports`, `runways` |
 | `faa_airports` | FAA NASR APT | weekly | `faa_airport_detail` (contacts) |
+| `planespotters_photos` | Planespotters API | daily | `aircraft_photos` + `/photos/*.jpg` |
 | `gmail_ingest` | Gmail API | 15 min | `emails` |
 
 ## Database objects
 **Tables:** `operators`, `part135_aircraft`, `faa_registry`, `aircraft_ref`, `t100_segment`,
-`aircraft_type_ref`, `airports`, `runways`, `faa_airport_detail`, `emails`, `services`, `service_runs`, `service_logs`, `notifications`.
+`aircraft_type_ref`, `aircraft_photos`, `airports`, `runways`, `faa_airport_detail`, `emails`, `services`, `service_runs`, `service_logs`, `notifications`.
 **Views:** `charter_fleet` (tail→operator→aircraft→Mode S hex), `charter_routes` (T-100 CLASS L/P = charter),
 `airport_capability` (airport + longest runway / runway count).
 
