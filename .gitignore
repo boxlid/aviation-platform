@@ -13,3 +13,13 @@ venv/
 data/
 logs/
 *.zip
+
+# Secrets — never commit real keys
+config/secrets.toml
+secrets/
+*.key
+*.pem
+*_token.json
+*credentials*.json
+.env
+.env.*

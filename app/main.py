@@ -53,6 +53,16 @@ def operators_page(request: Request):
     return page(request, "operators.html", active="operators", title="Operators")
 
 
+@app.get("/operator/{designator}", response_class=HTMLResponse)
+def operator_detail_page(request: Request, designator: str):
+    return page(request, "operator_detail.html", active="operators", title="Operator", designator=designator)
+
+
+@app.get("/fsdo", response_class=HTMLResponse)
+def fsdo_detail_page(request: Request):
+    return page(request, "fsdo_detail.html", active="operators", title="FSDO")
+
+
 @app.get("/routes", response_class=HTMLResponse)
 def routes_page(request: Request):
     return page(request, "routes.html", active="routes", title="Charter Routes")

@@ -13,3 +13,4 @@ google-auth>=2.20
 google-auth-oauthlib>=1.2
 google-auth-httplib2>=0.2
 playwright>=1.40
+tomli>=2.0 ; python_version < "3.11"

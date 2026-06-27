@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block crumb %}<a href="/operators" class="dim">Operators</a> · detail{% endblock %}
+{% block heading %}<span id="op-name">Operator</span>{% endblock %}
+{% block content %}
+  <div id="op-meta" class="grid cols-4"></div>
+
+  <div class="section-title">Fleet <span class="line"></span></div>
+  <div class="panel">
+    <table class="sortable" id="tbl">
+      <thead><tr>
+        <th data-key="n_number" data-type="str">Tail</th>
+        <th data-key="category" data-type="str">Category</th>
+        <th data-key="manufacturer" data-type="str">Aircraft</th>
+        <th data-key="mode_s_hex" data-type="str">Mode S</th>
+        <th data-key="registered_owner" data-type="str">Registered owner</th>
+        <th data-key="year_mfr" data-type="num" class="num">Year</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+{% endblock %}
+{% block script %}<script>SF.operatorDetail("{{ designator }}");</script>{% endblock %}

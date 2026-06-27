@@ -88,24 +88,98 @@ SF.fleet = async () => {
   run();
 };
 
-/* ── Operators ─────────────────────────────────────────────── */
+/* ── Reusable sortable table ───────────────────────────────────
+   Wire click-to-sort on a <table class="sortable"> with th[data-key][data-type].
+   Returns {update(rows)} so a search box can refresh the data in place. */
+SF.sortable = (table, rows, rowHTML) => {
+  const tbody = table.querySelector('tbody');
+  const ncols = table.querySelectorAll('thead th').length;
+  let key = null, type = 'str', dir = 1;
+  const cmp = (a, b) => {
+    if (type === 'num') return (parseFloat(a) || 0) - (parseFloat(b) || 0);
+    return String(a == null ? '' : a).localeCompare(String(b == null ? '' : b));
+  };
+  const draw = () => {
+    const r = key ? [...rows].sort((x, y) => cmp(x[key], y[key]) * dir) : rows;
+    tbody.innerHTML = r.length ? r.map(rowHTML).join('') : `<tr><td colspan="${ncols}" class="empty">No results</td></tr>`;
+    table.querySelectorAll('th[data-key]').forEach(th => { th.dataset.dir = th.dataset.key === key ? (dir > 0 ? 'asc' : 'desc') : ''; });
+  };
+  table.querySelectorAll('th[data-key]').forEach(th => {
+    th.onclick = () => {
+      if (key === th.dataset.key) dir = -dir;
+      else { key = th.dataset.key; type = th.dataset.type || 'str'; dir = 1; }
+      draw();
+    };
+  });
+  draw();
+  return { update(newRows) { rows = newRows; draw(); } };
+};
+
+/* ── Operators (sortable + drill-down links) ───────────────── */
 SF.operators = async () => {
+  const tbl = $('#tbl');
+  const rowHTML = o => `
+    <tr>
+      <td><a href="/operator/${encodeURIComponent(o.certificate_designator)}">${esc(o.operator_name)}</a></td>
+      <td class="num"><b>${fmtNum(o.fleet_size)}</b></td>
+      <td class="num dim">${fmtNum(o.jets)}</td>
+      <td class="num dim">${fmtNum(o.turboprops)}</td>
+      <td class="num dim">${fmtNum(o.helicopters)}</td>
+      <td>${o.fsdo ? `<a href="/fsdo?name=${encodeURIComponent(o.fsdo)}">${esc(o.fsdo)}</a>` : '<span class="muted">—</span>'}</td>
+    </tr>`;
+  let sorter = null;
   const run = async () => {
     const q = $('#q').value;
-    const rows = await getJSON('/api/operators?limit=200' + (q ? '&q=' + encodeURIComponent(q) : ''));
+    const rows = await getJSON('/api/operators?limit=400' + (q ? '&q=' + encodeURIComponent(q) : ''));
     $('#count').textContent = rows.length + ' operators';
-    $('#tbody').innerHTML = rows.map(r => `
-      <tr>
-        <td>${esc(r.operator_name)}</td>
-        <td style="text-align:right"><b>${fmtNum(r.fleet_size)}</b></td>
-        <td style="text-align:right" class="dim">${fmtNum(r.jets)}</td>
-        <td style="text-align:right" class="dim">${fmtNum(r.turboprops)}</td>
-        <td style="text-align:right" class="dim">${fmtNum(r.helicopters)}</td>
-        <td class="muted">${esc(r.fsdo || '')}</td>
-      </tr>`).join('');
+    sorter = sorter ? (sorter.update(rows), sorter) : SF.sortable(tbl, rows, rowHTML);
   };
   $('#q').addEventListener('input', debounce(run, 300));
   run();
+};
+
+/* ── Operator detail (fleet) ───────────────────────────────── */
+SF.operatorDetail = async (designator) => {
+  const d = await getJSON('/api/operators/' + encodeURIComponent(designator));
+  if (!d || !d.operator) { $('#op-name').textContent = 'Operator not found'; return; }
+  const o = d.operator;
+  $('#op-name').textContent = o.operator_name;
+  $('#op-meta').innerHTML = [
+    ['Fleet', fmtNum(o.fleet_size)], ['Jets', fmtNum(o.jets)],
+    ['Turboprop', fmtNum(o.turboprops)], ['Helicopters', fmtNum(o.helicopters)],
+  ].map(([k, v]) => `<div class="panel stat"><div class="glow"></div><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')
+    + `<div class="panel pad" style="grid-column:1/-1"><span class="muted">Certificate</span> <b>${esc(o.certificate_designator)}</b>
+        &nbsp;·&nbsp; <span class="muted">FSDO</span> ${o.fsdo ? `<a href="/fsdo?name=${encodeURIComponent(o.fsdo)}">${esc(o.fsdo)}</a>` : '—'}</div>`;
+  const rowHTML = r => `
+    <tr>
+      <td class="tail">${esc(r.n_number)}</td>
+      <td>${catBadge(r.category)}</td>
+      <td>${esc(r.manufacturer || '')} <span class="dim">${esc(r.model || r.make_model_series || '')}</span></td>
+      <td class="hex">${esc(r.mode_s_hex || '—')}</td>
+      <td class="muted">${esc(r.registered_owner || '—')}</td>
+      <td class="num muted">${esc(r.year_mfr || '')}</td>
+    </tr>`;
+  SF.sortable($('#tbl'), d.fleet, rowHTML);
+};
+
+/* ── FSDO detail (operators based there) ───────────────────── */
+SF.fsdoDetail = async () => {
+  const name = new URLSearchParams(location.search).get('name') || '';
+  $('#fsdo-name').textContent = name || 'FSDO';
+  const d = await getJSON('/api/fsdo?name=' + encodeURIComponent(name));
+  $('#fsdo-meta').innerHTML = [
+    ['FSDO', esc(name), '15px'], ['Operators', fmtNum(d.totals && d.totals.ops), '30px'],
+    ['Aircraft', fmtNum(d.totals && d.totals.aircraft), '30px'],
+  ].map(([k, v, fs]) => `<div class="panel stat"><div class="k">${k}</div><div class="v" style="font-size:${fs}">${v}</div></div>`).join('');
+  const rowHTML = o => `
+    <tr>
+      <td><a href="/operator/${encodeURIComponent(o.certificate_designator)}">${esc(o.operator_name)}</a></td>
+      <td class="num"><b>${fmtNum(o.fleet_size)}</b></td>
+      <td class="num dim">${fmtNum(o.jets)}</td>
+      <td class="num dim">${fmtNum(o.turboprops)}</td>
+      <td class="num dim">${fmtNum(o.helicopters)}</td>
+    </tr>`;
+  SF.sortable($('#tbl'), d.operators, rowHTML);
 };
 
 /* ── Charter routes (T-100) ────────────────────────────────── */
@@ -224,3 +298,16 @@ SF.serviceDetail = async (name) => {
 };
 
 function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+/* ── Notification bell dot — shown ONLY when there is an unread notification ── */
+SF.checkNotifications = async () => {
+  try {
+    const n = await getJSON('/api/notifications?limit=1');
+    const bell = document.getElementById('bell');
+    if (!bell) return;
+    const dot = bell.querySelector('.dot');
+    if (n.unread > 0 && !dot) { const s = document.createElement('span'); s.className = 'dot'; bell.appendChild(s); }
+    else if (!n.unread && dot) dot.remove();
+  } catch (e) { /* bell stays clean on error */ }
+};
+document.addEventListener('DOMContentLoaded', SF.checkNotifications);

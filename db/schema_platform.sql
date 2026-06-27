@@ -51,6 +51,20 @@ CREATE INDEX IF NOT EXISTS idx_logs_time ON service_logs(ts DESC);
 CREATE INDEX IF NOT EXISTS idx_logs_level ON service_logs(level);
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- Notifications — any service/system can raise one; the UI bell dot reflects unread.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS notifications (
+  id      bigserial PRIMARY KEY,
+  ts      timestamptz NOT NULL DEFAULT now(),
+  level   text NOT NULL DEFAULT 'info',   -- info | success | warning | error
+  source  text,                           -- originating service/system
+  title   text NOT NULL,
+  body    text,
+  read    boolean NOT NULL DEFAULT false
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(read, ts DESC);
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- FAA Aircraft Reference (ACFTREF) — decode mfr_mdl_code -> make/model/category.
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS aircraft_ref (

@@ -4,9 +4,21 @@ from typing import Optional
 from fastapi import APIRouter, Body, Query, Request
 from fastapi.responses import RedirectResponse
 
-from . import db, gmail, scheduler
+from . import db, gmail, notifications, scheduler
 
 router = APIRouter(prefix="/api")
+
+
+# ── Notifications ─────────────────────────────────────────────────────────────
+@router.get("/notifications")
+def list_notifications(limit: int = 50):
+    return {"unread": notifications.unread_count(), "items": notifications.recent(limit)}
+
+
+@router.post("/notifications/read")
+def read_notifications():
+    notifications.mark_all_read()
+    return {"ok": True}
 
 
 # ── Services ──────────────────────────────────────────────────────────────────
@@ -110,18 +122,40 @@ def aircraft(n_number: str):
     return rows[0] if rows else None
 
 
+_OPERATOR_AGG = """
+  SELECT o.certificate_designator, o.operator_name, o.fsdo, count(p.n_number) AS fleet_size,
+         count(*) FILTER (WHERE ar.category='Jet') AS jets,
+         count(*) FILTER (WHERE ar.category='Turboprop') AS turboprops,
+         count(*) FILTER (WHERE ar.category='Helicopter') AS helicopters
+  FROM operators o
+  LEFT JOIN part135_aircraft p USING (certificate_designator)
+  LEFT JOIN faa_registry r ON r.n_number = p.n_number
+  LEFT JOIN aircraft_ref ar ON ar.code = r.mfr_mdl_code
+"""
+
+
+@router.get("/operators/{designator}")
+def operator_detail(designator: str):
+    rows = db.query(_OPERATOR_AGG + " WHERE o.certificate_designator=%s GROUP BY 1,2,3", (designator,))
+    if not rows:
+        return None
+    fleet = db.query(_FLEET_SELECT + " WHERE o.certificate_designator=%s ORDER BY ar.category NULLS LAST, p.n_number",
+                     (designator,))
+    return {"operator": rows[0], "fleet": fleet}
+
+
+@router.get("/fsdo")
+def fsdo_detail(name: str):
+    operators = db.query(_OPERATOR_AGG + " WHERE o.fsdo=%s GROUP BY 1,2,3 ORDER BY fleet_size DESC", (name,))
+    totals = db.query_one(
+        "SELECT count(DISTINCT o.certificate_designator) ops, count(p.n_number) aircraft "
+        "FROM operators o LEFT JOIN part135_aircraft p USING (certificate_designator) WHERE o.fsdo=%s", (name,))
+    return {"fsdo": name, "totals": totals, "operators": operators}
+
+
 @router.get("/operators")
 def operators(q: Optional[str] = None, limit: int = 100):
-    sql = """
-      SELECT o.certificate_designator, o.operator_name, o.fsdo, count(p.n_number) AS fleet_size,
-             count(*) FILTER (WHERE ar.category='Jet') AS jets,
-             count(*) FILTER (WHERE ar.category='Turboprop') AS turboprops,
-             count(*) FILTER (WHERE ar.category='Helicopter') AS helicopters
-      FROM operators o
-      LEFT JOIN part135_aircraft p USING (certificate_designator)
-      LEFT JOIN faa_registry r ON r.n_number = p.n_number
-      LEFT JOIN aircraft_ref ar ON ar.code = r.mfr_mdl_code
-    """
+    sql = _OPERATOR_AGG
     params: list = []
     if q:
         sql += " WHERE o.operator_name ILIKE %s"; params.append(f"%{q}%")
