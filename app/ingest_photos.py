@@ -38,7 +38,7 @@ def _download(url: str, dest: str):
         f.write(r.content)
 
 
-def ingest_photos(log, run_id=None, limit: int = 400, delay: float = 0.4) -> dict:
+def ingest_photos(log, run_id=None, limit: int = 250, delay: float = 0.5) -> dict:
     # Tails with no photo record yet, jets first (most charter-relevant).
     tails = db.query("""
       SELECT DISTINCT p.n_number, (ar.category='Jet') AS is_jet
