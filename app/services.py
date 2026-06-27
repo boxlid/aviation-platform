@@ -10,7 +10,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Callable
 
-from . import db, ingest_aircraft_types, ingest_airports, ingest_faa, ingest_faa_airports, ingest_t100
+from . import (db, ingest_aircraft_types, ingest_airports, ingest_faa, ingest_faa_airports,
+               ingest_photos, ingest_t100)
 from .logs import get_logger
 
 
@@ -54,6 +55,9 @@ SERVICES: list[ServiceSpec] = [
     ServiceSpec("faa_airports", "FAA Airport Detail (Contacts)",
                 "US airport owner/manager names + phones and facility info. Source: FAA NASR APT 28-day subscription. (NASR based-aircraft fields are deprecated/empty — authoritative counts are gov-only; use ADS-B home-base inference instead.)",
                 "ingestion", WEEK, ingest_faa_airports.ingest_faa_airports),
+    ServiceSpec("planespotters_photos", "Aircraft Photos",
+                "Self-hosted aircraft photos (large thumbnails) by tail. Source: Planespotters public API (jets first; rate-limited batch each run).",
+                "ingestion", DAY, ingest_photos.ingest_photos),
     ServiceSpec("gmail_ingest", "Gmail Ingestion",
                 "Pull recent emails from the connected Gmail account into the searchable email store.",
                 "integration", 900, _gmail_ingest),

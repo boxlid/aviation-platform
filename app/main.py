@@ -9,7 +9,7 @@ from fastapi.templating import Jinja2Templates
 
 from . import db, scheduler
 from .api import router as api_router
-from .config import ROOT
+from .config import PHOTOS_DIR, ROOT
 from .logs import get_logger
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -32,6 +32,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Sonic Flight", lifespan=lifespan)
 app.include_router(api_router)
 app.mount("/static", StaticFiles(directory=os.path.join(HERE, "static")), name="static")
+app.mount("/photos", StaticFiles(directory=PHOTOS_DIR), name="photos")
 
 
 def page(request: Request, template: str, **ctx):

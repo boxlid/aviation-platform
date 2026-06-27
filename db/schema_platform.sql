@@ -207,6 +207,18 @@ CREATE TABLE IF NOT EXISTS faa_airport_detail (
 );
 CREATE INDEX IF NOT EXISTS idx_faa_apt_jet ON faa_airport_detail(based_jet DESC);
 
+-- Aircraft photos (Planespotters) — self-hosted large thumbnail + attribution link.
+CREATE TABLE IF NOT EXISTS aircraft_photos (
+  n_number      text PRIMARY KEY,
+  has_photo     boolean NOT NULL DEFAULT false,
+  photo_id      text,
+  thumbnail_url text,                 -- original Planespotters large-thumb URL
+  page_link     text,                 -- Planespotters photo page (full image)
+  photographer  text,
+  local_path    text,                 -- app-hosted copy, e.g. /photos/N700QS.jpg
+  fetched_at    timestamptz NOT NULL DEFAULT now()
+);
+
 -- BTS aircraft-type code → human-readable description (L_AIRCRAFT_TYPE lookup).
 CREATE TABLE IF NOT EXISTS aircraft_type_ref (
   code        text PRIMARY KEY,

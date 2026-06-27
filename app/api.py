@@ -132,7 +132,9 @@ def aircraft(n_number: str):
       WHERE p.n_number = %s ORDER BY o.operator_name""", (n,))
     if not registry and not operators:
         return None
-    return {"n_number": n, "registry": registry, "operators": operators}
+    photo = db.query_one(
+        "SELECT local_path, page_link, photographer FROM aircraft_photos WHERE n_number=%s AND has_photo", (n,))
+    return {"n_number": n, "registry": registry, "operators": operators, "photo": photo}
 
 
 _OPERATOR_AGG = """

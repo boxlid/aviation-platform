@@ -231,6 +231,15 @@ SF.aircraftDetail = async (n) => {
     <td class="tail">${esc(o.certificate_designator)}</td>
     <td>${o.fsdo ? `<a href="/fsdo?name=${encodeURIComponent(o.fsdo)}">${esc(o.fsdo)}</a>` : '<span class="muted">—</span>'}</td></tr>`);
 
+  // Self-hosted Planespotters photo, linked to the full image on their site
+  if (d.photo && d.photo.local_path) {
+    $('#ac-photo').innerHTML = `
+      <a href="${esc(d.photo.page_link)}" target="_blank" rel="noopener" title="View full photo on Planespotters">
+        <img src="${esc(d.photo.local_path)}" alt="${esc(d.n_number)}" style="width:100%;border-radius:var(--radius);display:block;border:1px solid var(--border)" />
+      </a>
+      <div class="muted" style="font-size:11px;margin-top:5px;text-align:right">© ${esc(d.photo.photographer || 'Planespotters')} · Planespotters ↗</div>`;
+  }
+
   // External trackers + photos (link out — no API needed)
   const reg = encodeURIComponent(d.n_number), hex = (r.mode_s_hex || '').toLowerCase();
   const links = [];

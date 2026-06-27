@@ -43,6 +43,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL") or secret("database.url") or "post
 
 DATA_DIR = os.path.join(ROOT, "data")
 RAW_DIR = os.path.join(DATA_DIR, "raw")
+PHOTOS_DIR = os.path.join(DATA_DIR, "photos")
 LOG_DIR = os.path.join(ROOT, "logs")
 SECRETS_DIR = os.path.join(ROOT, "secrets")
 
@@ -55,5 +56,5 @@ GMAIL_REDIRECT_URI = os.environ.get("GMAIL_REDIRECT_URI", "http://localhost:8000
 
 TIMEZONE = "America/Chicago"  # FAA registry refreshes at 23:30 CT
 
-for _d in (DATA_DIR, RAW_DIR, LOG_DIR, SECRETS_DIR):
+for _d in (DATA_DIR, RAW_DIR, PHOTOS_DIR, LOG_DIR, SECRETS_DIR):
     os.makedirs(_d, exist_ok=True)
