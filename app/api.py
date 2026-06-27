@@ -130,6 +130,27 @@ def operators(q: Optional[str] = None, limit: int = 100):
     return db.query(sql, params)
 
 
+@router.get("/routes")
+def routes(q: Optional[str] = None, origin: Optional[str] = None, dest: Optional[str] = None, limit: int = 200):
+    sql = """
+      SELECT carrier_name, origin, origin_city, dest, dest_city,
+             sum(departures) AS departures, sum(passengers) AS passengers,
+             round(max(distance)) AS distance, count(DISTINCT (year, month)) AS months
+      FROM charter_routes WHERE 1=1
+    """
+    params: list = []
+    if q:
+        sql += " AND carrier_name ILIKE %s"; params.append(f"%{q}%")
+    if origin:
+        sql += " AND origin = %s"; params.append(origin.upper())
+    if dest:
+        sql += " AND dest = %s"; params.append(dest.upper())
+    sql += (" GROUP BY carrier_name, origin, origin_city, dest, dest_city "
+            " HAVING sum(departures) > 0 ORDER BY departures DESC LIMIT %s")
+    params.append(min(limit, 500))
+    return db.query(sql, params)
+
+
 @router.get("/stats")
 def stats():
     one = db.query_one
@@ -140,6 +161,7 @@ def stats():
         "reference": one("SELECT count(*) c FROM aircraft_ref")["c"],
         "emails": one("SELECT count(*) c FROM emails")["c"],
         "adsb_ready": one("SELECT count(*) c FROM charter_fleet WHERE mode_s_hex IS NOT NULL AND mode_s_hex<>''")["c"],
+        "charter_segments": one("SELECT count(*) c FROM charter_routes")["c"],
     }
     out["by_category"] = db.query("""
         SELECT COALESCE(ar.category,'Unknown') category, count(*) n

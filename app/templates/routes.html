@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block crumb %}BTS T-100 · non-scheduled (charter) segments{% endblock %}
+{% block content %}
+  <div class="note" style="margin-bottom:16px">
+    Actual flown charter traffic from BTS T-100 (CLASS L/P = non-scheduled civilian). Departures and passengers are summed across the loaded months, by carrier and city-pair.
+  </div>
+  <div class="toolbar">
+    <input id="q" class="search" placeholder="Search carrier…" autofocus />
+    <input id="origin" placeholder="Origin (e.g. TEB)" style="width:140px" />
+    <input id="dest" placeholder="Dest (e.g. PBI)" style="width:140px" />
+    <span id="count" class="muted"></span>
+  </div>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Carrier</th><th>Origin</th><th>Destination</th>
+        <th style="text-align:right">Departures</th><th style="text-align:right">Passengers</th>
+        <th style="text-align:right">Miles</th><th style="text-align:right">Months</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+{% endblock %}
+{% block script %}<script>SF.routes();</script>{% endblock %}

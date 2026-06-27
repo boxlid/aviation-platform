@@ -53,6 +53,11 @@ def operators_page(request: Request):
     return page(request, "operators.html", active="operators", title="Operators")
 
 
+@app.get("/routes", response_class=HTMLResponse)
+def routes_page(request: Request):
+    return page(request, "routes.html", active="routes", title="Charter Routes")
+
+
 @app.get("/emails", response_class=HTMLResponse)
 def emails_page(request: Request):
     return page(request, "emails.html", active="emails", title="Emails")

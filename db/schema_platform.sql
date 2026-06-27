@@ -84,3 +84,44 @@ CREATE INDEX IF NOT EXISTS idx_emails_ts ON emails(internal_ts DESC);
 -- Full-text search over subject + body + from.
 CREATE INDEX IF NOT EXISTS idx_emails_fts ON emails
   USING gin (to_tsvector('english', coalesce(subject,'') || ' ' || coalesce(from_addr,'') || ' ' || coalesce(body,'')));
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- BTS T-100 Domestic Segment — carrier × route × aircraft × month traffic.
+-- CLASS: F/G = scheduled, L/P = NON-scheduled civilian (i.e. CHARTER) traffic.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS t100_segment (
+  year            int  NOT NULL,
+  month           int  NOT NULL,
+  unique_carrier  text NOT NULL,
+  airline_id      text,
+  carrier_name    text,
+  origin          text NOT NULL,
+  origin_city     text,
+  origin_state    text,
+  dest            text NOT NULL,
+  dest_city       text,
+  dest_state      text,
+  aircraft_group  text,
+  aircraft_type   text NOT NULL,
+  aircraft_config text NOT NULL,
+  departures      numeric,
+  seats           numeric,
+  passengers      numeric,
+  freight         numeric,
+  mail            numeric,
+  distance        numeric,
+  class           text NOT NULL,
+  PRIMARY KEY (year, month, unique_carrier, origin, dest, aircraft_type, aircraft_config, class)
+);
+CREATE INDEX IF NOT EXISTS idx_t100_carrier ON t100_segment(carrier_name);
+CREATE INDEX IF NOT EXISTS idx_t100_route   ON t100_segment(origin, dest);
+CREATE INDEX IF NOT EXISTS idx_t100_class   ON t100_segment(class);
+
+-- Charter (non-scheduled civilian) segments only.
+CREATE OR REPLACE VIEW charter_routes AS
+SELECT year, month, unique_carrier, carrier_name, origin, origin_city, origin_state,
+       dest, dest_city, dest_state, aircraft_type, aircraft_config,
+       departures, seats, passengers, distance,
+       CASE class WHEN 'L' THEN 'Non-sched pax/cargo' WHEN 'P' THEN 'Non-sched all-cargo' END AS class_desc
+FROM t100_segment
+WHERE class IN ('L', 'P');

@@ -16,7 +16,10 @@ Isolated sibling repo to `jarvis-repo` — no shared state.
 | `faa_registry` | FAA Releasable Aircraft Database (MASTER) | daily | tail → owner → Mode S hex |
 | `faa_reference` | FAA Releasable (ACFTREF) | daily | type code → make/model/category (jet vs heli) |
 | `faa_part135` | FAA Part 135 Operators & Aircraft | weekly | tail → operator (cert holder) |
+| `t100_segment` | BTS T-100 Domestic Segment | weekly | carrier × route × aircraft; CLASS L/P = charter |
 | `gmail_ingest` | Gmail API | 15 min | recent email → searchable store |
+
+> **T-100 note:** BTS removed programmatic download of this table (it's now an ASP.NET WebForms SPA), so `t100_segment` drives the real form with a **headless Chromium (Playwright)** on the mini and captures the file. `make setup` installs the browser (`playwright install chromium`).
 
 The "CI spine": `tail → operator (Part 135) → aircraft/category → Mode S hex (ADS-B join key)`.
 

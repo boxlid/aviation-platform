@@ -9,6 +9,7 @@ setup:                ## create venv + install all deps
 	python3 -m venv .venv
 	$(PIP) install -q -U pip
 	$(PIP) install -q -r requirements.txt
+	$(PY) -m playwright install chromium
 	@echo "ready: $(PY)"
 
 serve:                ## run the Sonic Flight app (http://localhost:8000)

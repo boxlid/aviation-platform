@@ -108,6 +108,31 @@ SF.operators = async () => {
   run();
 };
 
+/* ── Charter routes (T-100) ────────────────────────────────── */
+SF.routes = async () => {
+  const run = async () => {
+    const q = $('#q').value, origin = $('#origin').value, dest = $('#dest').value;
+    const params = new URLSearchParams({ limit: 300 });
+    if (q) params.set('q', q);
+    if (origin) params.set('origin', origin);
+    if (dest) params.set('dest', dest);
+    const rows = await getJSON('/api/routes?' + params);
+    $('#count').textContent = rows.length + (rows.length === 300 ? '+' : '') + ' routes';
+    $('#tbody').innerHTML = rows.length ? rows.map(r => `
+      <tr>
+        <td>${esc(r.carrier_name)}</td>
+        <td class="tail">${esc(r.origin)}</td>
+        <td><span class="tail">${esc(r.dest)}</span> <span class="muted" style="font-size:12px">${esc(r.dest_city || '')}</span></td>
+        <td style="text-align:right"><b>${fmtNum(Math.round(r.departures))}</b></td>
+        <td style="text-align:right" class="dim">${fmtNum(Math.round(r.passengers))}</td>
+        <td style="text-align:right" class="muted">${fmtNum(r.distance)}</td>
+        <td style="text-align:right" class="muted">${fmtNum(r.months)}</td>
+      </tr>`).join('') : '<tr><td colspan="7" class="empty">No charter segments — run the BTS T-100 Segment service.</td></tr>';
+  };
+  ['#q', '#origin', '#dest'].forEach(s => $(s).addEventListener('input', debounce(run, 300)));
+  run();
+};
+
 /* ── Emails ────────────────────────────────────────────────── */
 SF.emails = async () => {
   const status = await getJSON('/api/gmail/status');

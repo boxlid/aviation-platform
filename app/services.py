@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Callable
 
-from . import db, ingest_faa
+from . import db, ingest_faa, ingest_t100
 from .logs import get_logger
 
 
@@ -42,6 +42,9 @@ SERVICES: list[ServiceSpec] = [
     ServiceSpec("faa_part135", "FAA Part 135 Operators",
                 "Charter certificate holders and the tails on each certificate (tail → operator). Source: FAA Part 135 list.",
                 "ingestion", WEEK, ingest_faa.ingest_part135),
+    ServiceSpec("t100_segment", "BTS T-100 Segment",
+                "Carrier × route × aircraft monthly traffic; CLASS L/P = non-scheduled (charter) flights. Source: BTS T-100 Domestic Segment (headless-browser download).",
+                "ingestion", WEEK, ingest_t100.ingest_t100),
     ServiceSpec("gmail_ingest", "Gmail Ingestion",
                 "Pull recent emails from the connected Gmail account into the searchable email store.",
                 "integration", 900, _gmail_ingest),
