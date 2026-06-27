@@ -231,8 +231,21 @@ SF.aircraftDetail = async (n) => {
     <td class="tail">${esc(o.certificate_designator)}</td>
     <td>${o.fsdo ? `<a href="/fsdo?name=${encodeURIComponent(o.fsdo)}">${esc(o.fsdo)}</a>` : '<span class="muted">—</span>'}</td></tr>`);
 
+  // External trackers + photos (link out — no API needed)
+  const reg = encodeURIComponent(d.n_number), hex = (r.mode_s_hex || '').toLowerCase();
+  const links = [];
+  if (hex) links.push(['ADS-B Exchange', `https://globe.adsbexchange.com/?icao=${hex}`]);
+  links.push(['Flightradar24', `https://www.flightradar24.com/data/aircraft/${d.n_number.toLowerCase()}`]);
+  links.push(['FlightAware', `https://www.flightaware.com/live/flight/${reg}`]);
+  links.push(['JetPhotos', `https://www.jetphotos.com/registration/${reg}`]);
+  links.push(['Planespotters', `https://www.planespotters.net/photos/reg/${reg}`]);
+  $('#ac-links').innerHTML = '<div class="section-title" style="margin-top:0">Track &amp; photos <span class="line"></span></div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
+    + links.map(([t, u]) => `<a class="btn sm" href="${u}" target="_blank" rel="noopener">${t} ↗</a>`).join('')
+    + '</div>';
+
   $('#ac-adsb').innerHTML = r.mode_s_hex
-    ? `Live position & home-base inference will appear here once an ADS-B movement feed is wired. Join key: Mode S hex <span class="hex">${esc(r.mode_s_hex)}</span>.`
+    ? `Live in-app position &amp; home-base inference will appear here once an ADS-B movement feed is wired. Join key: Mode S hex <span class="hex">${esc(r.mode_s_hex)}</span>.`
     : 'No Mode S hex on file — ADS-B tracking unavailable for this tail.';
 };
 
