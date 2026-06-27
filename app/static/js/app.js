@@ -231,13 +231,19 @@ SF.aircraftDetail = async (n) => {
     <td class="tail">${esc(o.certificate_designator)}</td>
     <td>${o.fsdo ? `<a href="/fsdo?name=${encodeURIComponent(o.fsdo)}">${esc(o.fsdo)}</a>` : '<span class="muted">—</span>'}</td></tr>`);
 
-  // Self-hosted Planespotters photo, linked to the full image on their site
+  // Self-hosted Planespotters photo — fills the cell at the info pane's height,
+  // aspect-locked (object-fit:cover), bottoms aligned. No photo → collapse to 1 column.
   if (d.photo && d.photo.local_path) {
     $('#ac-photo').innerHTML = `
-      <a href="${esc(d.photo.page_link)}" target="_blank" rel="noopener" title="View full photo on Planespotters">
-        <img src="${esc(d.photo.local_path)}" alt="${esc(d.n_number)}" style="width:100%;border-radius:var(--radius);display:block;border:1px solid var(--border)" />
-      </a>
-      <div class="muted" style="font-size:11px;margin-top:5px;text-align:right">© ${esc(d.photo.photographer || 'Planespotters')} · Planespotters ↗</div>`;
+      <a class="panel" href="${esc(d.photo.page_link)}" target="_blank" rel="noopener" title="View full photo on Planespotters"
+         style="display:block;position:relative;height:100%;min-height:170px;overflow:hidden;padding:0">
+        <img src="${esc(d.photo.local_path)}" alt="${esc(d.n_number)}"
+             style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block" />
+        <span style="position:absolute;bottom:0;right:0;background:rgba(7,11,19,.72);color:var(--text-faint);font-size:11px;padding:3px 9px;border-top-left-radius:8px">© ${esc(d.photo.photographer || 'Planespotters')} · Planespotters ↗</span>
+      </a>`;
+  } else {
+    $('#ac-photo').style.display = 'none';
+    $('#ac-top').style.gridTemplateColumns = '1fr';
   }
 
   // External trackers + photos (link out — no API needed)

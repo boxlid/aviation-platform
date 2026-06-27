@@ -4,23 +4,23 @@
 {% block content %}
   <div id="ac-stats" class="grid cols-4"></div>
 
-  <div class="grid cols-2" style="margin-top:16px; align-items:start">
+  <!-- Info pane (left) and aircraft photo (right) — equal height, bottoms aligned -->
+  <div id="ac-top" class="grid cols-2" style="margin-top:16px; align-items:stretch">
     <div class="panel pad"><div id="ac-info"></div></div>
-    <div>
-      <div id="ac-photo" style="margin-bottom:16px"></div>
-      <div class="section-title" style="margin-top:0">On Part 135 certificate(s) <span class="line"></span></div>
-      <div class="panel">
-        <table class="sortable" id="ac-ops">
-          <thead><tr>
-            <th data-key="operator_name" data-type="str">Operator</th>
-            <th data-key="certificate_designator" data-type="str">Cert</th>
-            <th data-key="fsdo" data-type="str">FSDO</th>
-          </tr></thead><tbody></tbody>
-        </table>
-      </div>
-      <div id="ac-links" style="margin-top:18px"></div>
-      <div id="ac-adsb" class="note" style="margin-top:14px"></div>
-    </div>
+    <div id="ac-photo"></div>
   </div>
+
+  <div class="section-title">On Part 135 certificate(s) <span class="line"></span></div>
+  <div class="panel">
+    <table class="sortable" id="ac-ops">
+      <thead><tr>
+        <th data-key="operator_name" data-type="str">Operator</th>
+        <th data-key="certificate_designator" data-type="str">Cert</th>
+        <th data-key="fsdo" data-type="str">FSDO</th>
+      </tr></thead><tbody></tbody>
+    </table>
+  </div>
+  <div id="ac-links" style="margin-top:18px"></div>
+  <div id="ac-adsb" class="note" style="margin-top:14px"></div>
 {% endblock %}
 {% block script %}<script>SF.aircraftDetail("{{ n_number }}");</script>{% endblock %}
