@@ -28,6 +28,7 @@ function ago(ts) {
 }
 const dt = ts => ts ? new Date(ts).toLocaleString() : '—';
 const catBadge = c => c ? `<span class="badge cat-${esc(c)}">${esc(c)}</span>` : '<span class="muted">—</span>';
+const cleanType = t => !t ? '' : t.replace('_airport', '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 const statusPill = s => `<span class="status-pill st-${esc(s)}"><span class="dot-s"></span>${esc(s)}</span>`;
 
 /* ── Dashboard ─────────────────────────────────────────────── */
@@ -187,7 +188,8 @@ SF.airports = async () => {
   const tbl = $('#tbl');
   const rowHTML = a => `
     <tr>
-      <td>${esc(a.name)} <span class="muted" style="font-size:11px">${esc((a.type || '').replace('_', ' '))}</span></td>
+      <td><a href="/airport/${encodeURIComponent(a.ident)}">${esc(a.name)}</a></td>
+      <td class="muted">${esc(cleanType(a.type))}</td>
       <td class="tail">${esc(a.iata_code || '')}</td>
       <td class="dim">${esc(a.icao_code || a.ident)}</td>
       <td>${esc(a.municipality || '')}</td>
@@ -207,6 +209,46 @@ SF.airports = async () => {
   ['#q', '#country'].forEach(s => $(s).addEventListener('input', debounce(run, 300)));
   $('#minrwy').addEventListener('change', run);
   run();
+};
+
+/* ── Airport detail (everything we have) ───────────────────── */
+SF.airportDetail = async (ident) => {
+  const d = await getJSON('/api/airports/' + encodeURIComponent(ident));
+  if (!d || !d.airport) { $('#ap-name').textContent = 'Airport not found'; return; }
+  const a = d.airport, cap = d.capability || {};
+  $('#ap-name').textContent = a.name;
+  const coords = (a.latitude_deg != null && a.longitude_deg != null)
+    ? `${(+a.latitude_deg).toFixed(4)}, ${(+a.longitude_deg).toFixed(4)}` : '—';
+  const field = (k, v) => v != null && v !== '' && v !== undefined
+    ? `<div><div class="k muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1px">${k}</div><div style="margin-top:3px">${esc(v)}</div></div>` : '';
+  const link = (k, url) => url ? `<div><div class="k muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1px">${k}</div><div style="margin-top:3px"><a href="${esc(url)}" target="_blank" rel="noopener">open ↗</a></div></div>` : '';
+  const cards = [
+    ['Size', cleanType(a.type) || '—'],
+    ['Longest runway', cap.longest_runway_ft ? fmtNum(cap.longest_runway_ft) + ' ft' : '—'],
+    ['Runways', fmtNum(cap.runway_count)],
+    ['Elevation', a.elevation_ft != null && a.elevation_ft !== '' ? fmtNum(a.elevation_ft) + ' ft' : '—'],
+  ];
+  $('#ap-meta').innerHTML = cards.map(([k, v]) =>
+    `<div class="panel stat"><div class="glow"></div><div class="k">${k}</div><div class="v" style="font-size:22px">${esc(v)}</div></div>`).join('')
+    + `<div class="panel pad" style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:26px">
+        ${field('IATA', a.iata_code)} ${field('ICAO', a.icao_code)} ${field('Ident', a.ident)}
+        ${field('Local', a.local_code)} ${field('GPS', a.gps_code)}
+        ${field('Country', a.iso_country)} ${field('Region', a.iso_region)} ${field('City', a.municipality)}
+        ${field('Continent', a.continent)} ${field('Coordinates', coords)}
+        ${field('Scheduled service', a.scheduled_service ? 'Yes' : 'No')}
+        ${link('Website', a.home_link)} ${link('Wikipedia', a.wikipedia_link)}
+      </div>`;
+  const rwy = (d.runways || []).map(r => ({ ...r, ends: `${r.le_ident || ''}/${r.he_ident || ''}` }));
+  const rowHTML = r => `
+    <tr>
+      <td class="tail">${esc(r.ends)}</td>
+      <td class="num">${r.length_ft ? '<b>' + fmtNum(r.length_ft) + '</b> ft' : '—'}</td>
+      <td class="num dim">${r.width_ft ? fmtNum(r.width_ft) + ' ft' : '—'}</td>
+      <td>${esc(r.surface || '—')}</td>
+      <td class="muted">${r.lighted ? 'Yes' : 'No'}</td>
+      <td>${r.closed ? '<span style="color:var(--bad)">Closed</span>' : '<span style="color:var(--good)">Open</span>'}</td>
+    </tr>`;
+  SF.sortable($('#tbl'), rwy, rowHTML);
 };
 
 /* ── Charter routes (T-100) ────────────────────────────────── */

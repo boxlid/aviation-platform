@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block crumb %}<a href="/airports" class="dim">Airports</a> · detail{% endblock %}
+{% block heading %}<span id="ap-name">Airport</span>{% endblock %}
+{% block content %}
+  <div id="ap-meta" class="grid cols-4"></div>
+
+  <div class="section-title">Runways <span class="line"></span></div>
+  <div class="panel">
+    <table class="sortable" id="tbl">
+      <thead><tr>
+        <th data-key="ends" data-type="str">Ends</th>
+        <th data-key="length_ft" data-type="num" class="num">Length</th>
+        <th data-key="width_ft" data-type="num" class="num">Width</th>
+        <th data-key="surface" data-type="str">Surface</th>
+        <th data-key="lighted" data-type="str">Lighted</th>
+        <th data-key="closed" data-type="str">Status</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+{% endblock %}
+{% block script %}<script>SF.airportDetail("{{ ident }}");</script>{% endblock %}

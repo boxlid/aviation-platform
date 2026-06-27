@@ -207,6 +207,18 @@ def airports(q: Optional[str] = None, country: Optional[str] = None, type: Optio
     return db.query(sql, params)
 
 
+@router.get("/airports/{ident}")
+def airport_detail(ident: str):
+    ap = db.query_one("SELECT * FROM airports WHERE ident=%s", (ident,))
+    if not ap:
+        return None
+    cap = db.query_one("SELECT longest_runway_ft, runway_count FROM airport_capability WHERE ident=%s", (ident,))
+    runways = db.query(
+        "SELECT le_ident, he_ident, length_ft, width_ft, surface, lighted, closed "
+        "FROM runways WHERE airport_ident=%s ORDER BY length_ft DESC NULLS LAST", (ident,))
+    return {"airport": ap, "capability": cap, "runways": runways}
+
+
 @router.get("/stats")
 def stats():
     one = db.query_one

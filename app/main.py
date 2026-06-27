@@ -73,6 +73,11 @@ def airports_page(request: Request):
     return page(request, "airports.html", active="airports", title="Airports")
 
 
+@app.get("/airport/{ident}", response_class=HTMLResponse)
+def airport_detail_page(request: Request, ident: str):
+    return page(request, "airport_detail.html", active="airports", title="Airport", ident=ident)
+
+
 @app.get("/emails", response_class=HTMLResponse)
 def emails_page(request: Request):
     return page(request, "emails.html", active="emails", title="Emails")
