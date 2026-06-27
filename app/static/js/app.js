@@ -29,8 +29,23 @@ function ago(ts) {
 const dt = ts => ts ? new Date(ts).toLocaleString() : '—';
 const catBadge = c => c ? `<span class="badge cat-${esc(c)}">${esc(c)}</span>` : '<span class="muted">—</span>';
 const cleanType = t => !t ? '' : t.replace('_airport', '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-const titleCase = s => !s ? s : String(s).toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
+const titleCase = s => !s ? s : String(s).toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase())
+  .replace(/\b(Llc|Inc|Llp|Lllp|Lp|Pc|Pa|Usa|Us|Ii|Iii|Iv)\b/g, m => m.toUpperCase());
 const statusPill = s => `<span class="status-pill st-${esc(s)}"><span class="dot-s"></span>${esc(s)}</span>`;
+
+/* FAA registration decodes */
+const REGTYPE = { '1': 'Individual', '2': 'Partnership', '3': 'Corporation', '4': 'Co-owned', '5': 'Government', '7': 'LLC', '8': 'Non-citizen corp', '9': 'Non-citizen co-owned' };
+const regType = c => REGTYPE[c] || (c ? 'Type ' + c : '—');
+const STATUS = {
+  V: ['Valid', 'good'], T: ['Valid (trustee)', 'good'],
+  R: ['Registration pending', 'warn'], M: ['Valid / pending', 'warn'], N: ['Non-citizen review', 'warn'],
+  A: ['Triennial mailed', 'warn'], S: ['Triennial mailed', 'warn'],
+  E: ['Revoked', 'bad'], W: ['Deregistered', 'bad'], D: ['Expired dealer', 'bad'], X: ['Enforcement letter', 'bad'],
+  Z: ['Reserved', 'neutral'],
+};
+const statusInfo = c => !c ? ['—', 'neutral'] : (STATUS[c] || (/^\d+$/.test(c) ? ['In process', 'warn'] : [c, 'neutral']));
+const statusBadge = c => { const [l, t] = statusInfo(c); return `<span class="badge st-tier-${t}">${esc(l)}</span>`; };
+const seats = v => { const n = parseInt(v, 10); return n ? n : '—'; };
 
 /* ── Dashboard ─────────────────────────────────────────────── */
 SF.dashboard = async () => {
@@ -75,7 +90,7 @@ SF.fleet = async () => {
     $('#count').textContent = rows.length + (rows.length === 200 ? '+' : '') + ' aircraft';
     $('#tbody').innerHTML = rows.length ? rows.map(r => `
       <tr>
-        <td class="tail">${esc(r.n_number)}</td>
+        <td><a class="tail" href="/aircraft/${encodeURIComponent(r.n_number)}">${esc(r.n_number)}</a></td>
         <td>${catBadge(r.category)}</td>
         <td>${esc(r.manufacturer || '')} <span class="dim">${esc(r.model || r.make_model_series || '')}</span></td>
         <td>${esc(r.operator_name)}</td>
@@ -154,10 +169,12 @@ SF.operatorDetail = async (designator) => {
         &nbsp;·&nbsp; <span class="muted">FSDO</span> ${o.fsdo ? `<a href="/fsdo?name=${encodeURIComponent(o.fsdo)}">${esc(o.fsdo)}</a>` : '—'}</div>`;
   const rowHTML = r => `
     <tr>
-      <td class="tail">${esc(r.n_number)}</td>
+      <td><a class="tail" href="/aircraft/${encodeURIComponent(r.n_number)}">${esc(r.n_number)}</a></td>
       <td>${catBadge(r.category)}</td>
       <td>${esc(r.manufacturer || '')} <span class="dim">${esc(r.model || r.make_model_series || '')}</span></td>
+      <td class="num">${seats(r.num_seats)}</td>
       <td class="hex">${esc(r.mode_s_hex || '—')}</td>
+      <td>${statusBadge(r.status_code)}</td>
       <td class="muted">${esc(r.registered_owner || '—')}</td>
       <td class="num muted">${esc(r.year_mfr || '')}</td>
     </tr>`;
@@ -182,6 +199,41 @@ SF.fsdoDetail = async () => {
       <td class="num dim">${fmtNum(o.helicopters)}</td>
     </tr>`;
   SF.sortable($('#tbl'), d.operators, rowHTML);
+};
+
+/* ── Aircraft / tail detail ────────────────────────────────── */
+SF.aircraftDetail = async (n) => {
+  const d = await getJSON('/api/aircraft/' + encodeURIComponent(n));
+  if (!d) { $('#ac-name').textContent = 'Aircraft not found'; return; }
+  const r = d.registry || {};
+  $('#ac-name').innerHTML = `${esc(d.n_number)} ${r.manufacturer ? '<span class="muted" style="font-size:14px">' + esc(titleCase(r.manufacturer)) + ' ' + esc(r.model || '') + '</span>' : ''}`;
+  $('#ac-stats').innerHTML = [
+    ['Category', r.category || '—'], ['Seats', seats(r.num_seats)],
+    ['Engine', r.engine_type || '—'], ['Year', r.year_mfr || '—'],
+  ].map(([k, v]) => `<div class="panel stat"><div class="glow"></div><div class="k">${k}</div><div class="v" style="font-size:20px">${esc(v)}</div></div>`).join('');
+
+  const kv = (k, v) => (v == null || v === '') ? '' : `<div class="kv"><span class="kv-k">${k}</span><span class="kv-v">${v}</span></div>`;
+  const ownerLoc = [titleCase(r.city), r.state].filter(Boolean).join(', ');
+  $('#ac-info').innerHTML =
+    kv('Manufacturer', esc(titleCase(r.manufacturer))) + kv('Model', esc(r.model)) +
+    kv('Aircraft type', esc(r.aircraft_type)) + kv('Engine type', esc(r.engine_type)) +
+    kv('Engines', r.num_engines ? parseInt(r.num_engines, 10) : '') + kv('Seats', r.num_seats ? seats(r.num_seats) : '') +
+    kv('Serial number', esc(r.serial_number)) +
+    kv('Mode S (hex)', r.mode_s_hex ? '<span class="hex">' + esc(r.mode_s_hex) + '</span>' : '') +
+    kv('Mode S (octal)', esc(r.mode_s_code_octal)) +
+    kv('Registration', statusBadge(r.status_code)) +
+    kv('Registered owner', esc(titleCase(r.registrant_name))) +
+    kv('Owner type', esc(regType(r.registrant_type))) +
+    kv('Owner location', esc(ownerLoc));
+
+  SF.sortable($('#ac-ops'), d.operators, o => `
+    <tr><td><a href="/operator/${encodeURIComponent(o.certificate_designator)}">${esc(o.operator_name)}</a></td>
+    <td class="tail">${esc(o.certificate_designator)}</td>
+    <td>${o.fsdo ? `<a href="/fsdo?name=${encodeURIComponent(o.fsdo)}">${esc(o.fsdo)}</a>` : '<span class="muted">—</span>'}</td></tr>`);
+
+  $('#ac-adsb').innerHTML = r.mode_s_hex
+    ? `Live position & home-base inference will appear here once an ADS-B movement feed is wired. Join key: Mode S hex <span class="hex">${esc(r.mode_s_hex)}</span>.`
+    : 'No Mode S hex on file — ADS-B tracking unavailable for this tail.';
 };
 
 /* ── Airports (OurAirports) ────────────────────────────────── */

@@ -118,8 +118,21 @@ def fleet(q: Optional[str] = None, category: Optional[str] = None, operator: Opt
 
 @router.get("/aircraft/{n_number}")
 def aircraft(n_number: str):
-    rows = db.query(_FLEET_SELECT + " WHERE p.n_number = %s", (n_number.upper(),))
-    return rows[0] if rows else None
+    n = n_number.upper()
+    registry = db.query_one("""
+      SELECT r.n_number, r.serial_number, r.mfr_mdl_code, r.year_mfr, r.registrant_type,
+             r.registrant_name, r.city, r.state, r.status_code, r.mode_s_code_octal, r.mode_s_hex,
+             ar.manufacturer, ar.model, ar.aircraft_type, ar.engine_type, ar.category,
+             ar.num_engines, ar.num_seats
+      FROM faa_registry r LEFT JOIN aircraft_ref ar ON ar.code = r.mfr_mdl_code
+      WHERE r.n_number = %s""", (n,))
+    operators = db.query("""
+      SELECT p.certificate_designator, o.operator_name, o.fsdo, p.serial_number, p.make_model_series
+      FROM part135_aircraft p JOIN operators o USING (certificate_designator)
+      WHERE p.n_number = %s ORDER BY o.operator_name""", (n,))
+    if not registry and not operators:
+        return None
+    return {"n_number": n, "registry": registry, "operators": operators}
 
 
 _OPERATOR_AGG = """

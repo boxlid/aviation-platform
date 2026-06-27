@@ -140,6 +140,10 @@ table.dense tbody td { padding: 6px 12px; font-size: 13px; }
 .badge.cat-Turboprop { color: var(--gold); border-color: rgba(216, 180, 106, 0.35); background: rgba(216, 180, 106, 0.08); }
 .badge.cat-Helicopter { color: #c78bff; border-color: rgba(199, 139, 255, 0.35); background: rgba(199, 139, 255, 0.08); }
 .badge.cat-Piston, .badge.cat-Other, .badge.cat-Unknown { color: var(--text-dim); }
+.badge.st-tier-good { color: var(--good); border-color: rgba(56,225,160,.4); background: rgba(56,225,160,.08); }
+.badge.st-tier-warn { color: var(--warn); border-color: rgba(255,209,102,.4); background: rgba(255,209,102,.08); }
+.badge.st-tier-bad  { color: var(--bad);  border-color: rgba(255,107,125,.4); background: rgba(255,107,125,.08); }
+.badge.st-tier-neutral { color: var(--text-dim); }
 .dot-s { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .st-success .dot-s, .st-idle .dot-s { background: var(--good); box-shadow: 0 0 8px var(--good); }
 .st-running .dot-s { background: var(--running); box-shadow: 0 0 8px var(--running); animation: pulse 1.2s infinite; }

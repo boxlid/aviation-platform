@@ -93,7 +93,7 @@ instead of re-reading code. Keep it in sync when interfaces change.
 - Emails/Gmail: `GET /emails`, `GET /gmail/status|connect|callback`, `POST /gmail/disconnect`
 
 ## Pages (`app/main.py` → `app/templates/`)
-`/` dashboard · `/fleet` · `/operators` · `/operator/{designator}` · `/fsdo?name=` ·
+`/` dashboard · `/fleet` · `/operators` · `/operator/{designator}` · `/aircraft/{n}` · `/fsdo?name=` ·
 `/routes` · `/route` · `/airports` · `/airport/{ident}` · `/emails` · `/settings/services` · `/settings/services/{name}`
 
 ## Deployment

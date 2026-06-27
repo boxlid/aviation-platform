@@ -58,6 +58,11 @@ def operator_detail_page(request: Request, designator: str):
     return page(request, "operator_detail.html", active="operators", title="Operator", designator=designator)
 
 
+@app.get("/aircraft/{n_number}", response_class=HTMLResponse)
+def aircraft_detail_page(request: Request, n_number: str):
+    return page(request, "aircraft_detail.html", active="fleet", title="Aircraft", n_number=n_number)
+
+
 @app.get("/fsdo", response_class=HTMLResponse)
 def fsdo_detail_page(request: Request):
     return page(request, "fsdo_detail.html", active="operators", title="FSDO")
