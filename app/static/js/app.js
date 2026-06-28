@@ -489,26 +489,38 @@ SF.routeDetail = async () => {
 
 /* ── Emails ────────────────────────────────────────────────── */
 SF.emails = async () => {
-  const status = await getJSON('/api/gmail/status');
+  const boxes = await getJSON('/api/mailboxes');
+  const sel = $('#mailbox');
+  sel.innerHTML = '<option value="">All mailboxes</option>' +
+    boxes.map(b => `<option value="${esc(b.mailbox)}">${esc(b.mailbox)} (${fmtNum(b.n)})</option>`).join('');
+
   const banner = $('#gmail-banner');
-  const params = new URLSearchParams(location.search);
-  if (params.get('connected')) banner.innerHTML = '<div class="note">✓ Gmail connected. Run the Gmail Ingestion service to pull email.</div>';
-  else if (params.get('error')) banner.innerHTML = `<div class="note" style="border-color:var(--bad)">Gmail error: ${esc(params.get('error'))}</div>`;
-  else if (!status.has_credentials) banner.innerHTML = '<div class="note">Gmail not configured. Add <code>secrets/gmail_credentials.json</code> (Google Cloud OAuth client), then connect.</div>';
-  else if (!status.connected) banner.innerHTML = '<div class="note">Gmail credentials present. <a class="btn sm primary" href="/api/gmail/connect">Connect Gmail</a></div>';
-  else banner.innerHTML = '<div class="note">✓ Gmail connected.</div>';
+  if (boxes.length) {
+    banner.innerHTML = `<div class="note">Ingesting <b>${boxes.length}</b> Workspace mailboxes via domain-wide delegation — search runs across all of them.</div>`;
+  } else {
+    const status = await getJSON('/api/gmail/status');
+    banner.innerHTML = status.connected
+      ? '<div class="note">✓ Gmail connected. Run an ingestion service to pull email.</div>'
+      : '<div class="note">No mail yet — run the <b>Workspace Mail</b> service (Settings → Services) to ingest all mailboxes.</div>';
+  }
 
   const run = async () => {
-    const q = $('#q').value;
-    const rows = await getJSON('/api/emails?limit=80' + (q ? '&q=' + encodeURIComponent(q) : ''));
-    $('#count').textContent = rows.length + ' emails';
+    const p = new URLSearchParams({ limit: 100 });
+    if ($('#q').value) p.set('q', $('#q').value);
+    if (sel.value) p.set('mailbox', sel.value);
+    const rows = await getJSON('/api/emails?' + p);
+    $('#count').textContent = rows.length + (rows.length === 100 ? '+' : '') + ' emails';
     $('#tbody').innerHTML = rows.length ? rows.map(r => `
-      <tr><td><b>${esc(r.from_name || r.from_addr)}</b><br><span class="muted" style="font-size:12px">${esc(r.from_addr)}</span></td>
-      <td>${esc(r.subject || '(no subject)')}<br><span class="muted" style="font-size:12px">${esc(r.snippet || '')}</span></td>
-      <td class="muted" style="white-space:nowrap">${dt(r.internal_ts)}</td></tr>`).join('')
-      : '<tr><td colspan="3" class="empty">No emails yet — connect Gmail and run the Gmail Ingestion service.</td></tr>';
+      <tr>
+        <td class="dim" style="font-size:12.5px;white-space:nowrap">${esc(r.mailbox || '—')}</td>
+        <td><b>${esc(r.from_name || r.from_addr)}</b><br><span class="muted" style="font-size:12px">${esc(r.from_addr)}</span></td>
+        <td>${esc(r.subject || '(no subject)')}<br><span class="muted" style="font-size:12px">${esc(r.snippet || '')}</span></td>
+        <td class="muted" style="white-space:nowrap">${dt(r.internal_ts)}</td>
+      </tr>`).join('')
+      : '<tr><td colspan="4" class="empty">No emails — run the Workspace Mail service.</td></tr>';
   };
   $('#q').addEventListener('input', debounce(run, 300));
+  sel.addEventListener('change', run);
   run();
 };
 

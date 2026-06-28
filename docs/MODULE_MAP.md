@@ -66,6 +66,10 @@ instead of re-reading code. Keep it in sync when interfaces change.
 ### `app/weather.py` — aviationweather.gov (NOAA, free, public domain)
 - `report(icao, lat, lon) -> dict` — METAR + TAF + nearby PIREPs + SIGMET/AIRMET over the point (cached 5 min). On-demand (not a scheduled service); served by `GET /api/airports/{ident}/weather`.
 
+### `app/workspace.py` — Google Workspace domain-wide delegation (ALL mailboxes)
+- `configured()` · `list_users() -> list` (Admin SDK) · `ingest_all(log, run_id, per_user=50) -> dict` (the `workspace_mail` service func)
+- Service account `secrets/workspace_sa.json` impersonates each user (no per-user OAuth). Config: `[workspace] admin_email, domain` in secrets.toml. Writes to `emails` (tagged by `mailbox`).
+
 ### `app/gmail.py` — Gmail OAuth + ingest + search
 - `has_credentials()` · `is_connected()` · `auth_url()` · `handle_callback(full_url)` · `disconnect()`
 - `ingest_recent(log, run_id, max_results=100) -> dict` (the `gmail_ingest` service func)
@@ -82,6 +86,7 @@ instead of re-reading code. Keep it in sync when interfaces change.
 | `ourairports` | OurAirports CSVs | weekly | `airports`, `runways` |
 | `faa_airports` | FAA NASR APT | weekly | `faa_airport_detail` (contacts) |
 | `planespotters_photos` | Planespotters API | daily | `aircraft_photos` + `/photos/*.jpg` |
+| `workspace_mail` | Workspace DWD (all mailboxes) | 30 min | `emails` (by mailbox) |
 | `gmail_ingest` | Gmail API | 15 min | `emails` |
 
 ## Database objects
@@ -94,7 +99,7 @@ instead of re-reading code. Keep it in sync when interfaces change.
 - Notifications: `GET /notifications`, `POST /notifications/read`
 - Services: `GET /services`, `GET /services/{name}`, `POST /services/{name}/run|pause|resume`, `PATCH /services/{name}/interval`, `GET /services/{name}/runs|logs`, `GET /logs`
 - Fleet/operators: `GET /fleet`, `GET /aircraft/{n}`, `GET /operators`, `GET /operators/{designator}`, `GET /fsdo?name=`, `GET /routes`, `GET /route`, `GET /airports`, `GET /airports/{ident}`, `GET /airports/{ident}/weather`, `GET /stats`
-- Emails/Gmail: `GET /emails`, `GET /gmail/status|connect|callback`, `POST /gmail/disconnect`
+- Emails/Gmail: `GET /emails`, `GET /mailboxes`, `GET /gmail/status|connect|callback`, `POST /gmail/disconnect`
 
 ## Pages (`app/main.py` → `app/templates/`)
 `/` dashboard · `/fleet` · `/operators` · `/operator/{designator}` · `/aircraft/{n}` · `/fsdo?name=` ·

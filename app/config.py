@@ -54,6 +54,14 @@ GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 # Local redirect for the OAuth installed-app flow.
 GMAIL_REDIRECT_URI = os.environ.get("GMAIL_REDIRECT_URI", "http://localhost:8000/api/gmail/callback")
 
+# Google Workspace domain-wide delegation (service account impersonates each user).
+WORKSPACE_SA = os.path.join(SECRETS_DIR, "workspace_sa.json")
+WORKSPACE_ADMIN = secret("workspace.admin_email")   # a super-admin to impersonate for the Admin SDK
+WORKSPACE_DOMAIN = secret("workspace.domain")
+WORKSPACE_SCOPES = ["https://www.googleapis.com/auth/gmail.readonly",
+                    "https://www.googleapis.com/auth/drive.readonly",
+                    "https://www.googleapis.com/auth/admin.directory.user.readonly"]
+
 TIMEZONE = "America/Chicago"  # FAA registry refreshes at 23:30 CT
 
 for _d in (DATA_DIR, RAW_DIR, PHOTOS_DIR, LOG_DIR, SECRETS_DIR):

@@ -118,11 +118,16 @@ def ingest_recent(log, run_id=None, max_results: int = 100) -> dict:
     return {"ingested": ingested}
 
 
-def search(q: str | None, limit: int = 50) -> list[dict]:
+def search(q: str | None, limit: int = 50, mailbox: str | None = None) -> list[dict]:
+    sql = "SELECT id, mailbox, from_addr, from_name, subject, snippet, internal_ts FROM emails WHERE 1=1"
+    params: list = []
     if q:
-        return db.query(
-            "SELECT id, from_addr, from_name, subject, snippet, internal_ts "
-            "FROM emails WHERE to_tsvector('english', coalesce(subject,'')||' '||coalesce(from_addr,'')||' '||coalesce(body,'')) "
-            "@@ websearch_to_tsquery('english', %s) ORDER BY internal_ts DESC NULLS LAST LIMIT %s", (q, limit))
-    return db.query("SELECT id, from_addr, from_name, subject, snippet, internal_ts FROM emails "
-                    "ORDER BY internal_ts DESC NULLS LAST LIMIT %s", (limit,))
+        sql += (" AND to_tsvector('english', coalesce(subject,'')||' '||coalesce(from_addr,'')||' '||coalesce(body,'')) "
+                "@@ websearch_to_tsquery('english', %s)")
+        params.append(q)
+    if mailbox:
+        sql += " AND mailbox = %s"
+        params.append(mailbox)
+    sql += " ORDER BY internal_ts DESC NULLS LAST LIMIT %s"
+    params.append(limit)
+    return db.query(sql, params)

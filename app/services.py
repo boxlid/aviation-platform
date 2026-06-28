@@ -30,6 +30,11 @@ def _gmail_ingest(log, run_id=None) -> dict:
     return ingest_recent(log, run_id)
 
 
+def _workspace_mail(log, run_id=None) -> dict:
+    from .workspace import ingest_all  # lazy import
+    return ingest_all(log, run_id)
+
+
 DAY = 86_400
 WEEK = 7 * DAY
 
@@ -61,6 +66,9 @@ SERVICES: list[ServiceSpec] = [
     ServiceSpec("gmail_ingest", "Gmail Ingestion",
                 "Pull recent emails from the connected Gmail account into the searchable email store.",
                 "integration", 900, _gmail_ingest),
+    ServiceSpec("workspace_mail", "Workspace Mail (All Mailboxes)",
+                "Ingest recent email from every user's mailbox via Google Workspace domain-wide delegation (service-account impersonation).",
+                "integration", 1800, _workspace_mail),
 ]
 
 REGISTRY: dict[str, ServiceSpec] = {s.name: s for s in SERVICES}

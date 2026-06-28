@@ -98,6 +98,9 @@ CREATE INDEX IF NOT EXISTS idx_emails_ts ON emails(internal_ts DESC);
 -- Full-text search over subject + body + from.
 CREATE INDEX IF NOT EXISTS idx_emails_fts ON emails
   USING gin (to_tsvector('english', coalesce(subject,'') || ' ' || coalesce(from_addr,'') || ' ' || coalesce(body,'')));
+-- Which user's mailbox this message came from (Workspace domain-wide ingestion).
+ALTER TABLE emails ADD COLUMN IF NOT EXISTS mailbox text;
+CREATE INDEX IF NOT EXISTS idx_emails_mailbox ON emails(mailbox);
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- BTS T-100 Domestic Segment — carrier × route × aircraft × month traffic.

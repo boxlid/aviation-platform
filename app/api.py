@@ -306,8 +306,13 @@ def stats():
 
 # ── Emails + Gmail ────────────────────────────────────────────────────────────
 @router.get("/emails")
-def emails(q: Optional[str] = None, limit: int = 50):
-    return gmail.search(q, limit)
+def emails(q: Optional[str] = None, limit: int = 50, mailbox: Optional[str] = None):
+    return gmail.search(q, limit, mailbox)
+
+
+@router.get("/mailboxes")
+def mailboxes():
+    return db.query("SELECT mailbox, count(*) n FROM emails WHERE mailbox IS NOT NULL GROUP BY mailbox ORDER BY mailbox")
 
 
 @router.get("/gmail/status")

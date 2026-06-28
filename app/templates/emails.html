@@ -1,14 +1,15 @@
 {% extends "base.html" %}
-{% block crumb %}Gmail ingestion · searchable email{% endblock %}
+{% block crumb %}Workspace mail · all mailboxes, searchable{% endblock %}
 {% block content %}
   <div id="gmail-banner" style="margin-bottom:16px"></div>
   <div class="toolbar">
-    <input id="q" class="search" placeholder="Search emails (subject, sender, body)…" autofocus />
+    <input id="q" class="search" placeholder="Search email across all mailboxes (subject, sender, body)…" autofocus />
+    <select id="mailbox" style="min-width:200px"><option value="">All mailboxes</option></select>
     <span id="count" class="muted"></span>
   </div>
   <div class="panel">
     <table>
-      <thead><tr><th style="width:260px">From</th><th>Subject</th><th>Received</th></tr></thead>
+      <thead><tr><th style="width:200px">Mailbox</th><th style="width:240px">From</th><th>Subject</th><th>Received</th></tr></thead>
       <tbody id="tbody"></tbody>
     </table>
   </div>
