@@ -11,7 +11,26 @@
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="brand">
-      <a href="/" class="brand-logo" title="Sonic Flights"><img src="/static/img/logo.jpg" alt="Sonic Flights" /></a>
+      <a href="/" class="brand-logo" title="Sonic Flights" aria-label="Sonic Flights">
+        <svg viewBox="0 0 250 50" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sfJet" x1="6" y1="44" x2="52" y2="4" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#1b6cff"/><stop offset="0.55" stop-color="#3ce0ff"/><stop offset="1" stop-color="#9af5ff"/>
+            </linearGradient>
+            <filter id="sfGlow" x="-70%" y="-70%" width="240%" height="240%">
+              <feGaussianBlur stdDeviation="1.7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <g filter="url(#sfGlow)">
+            <path d="M5 42 L49 5 L31 29 Z" fill="url(#sfJet)"/>
+            <path d="M17 43 L43 23 L33 36 Z" fill="url(#sfJet)" opacity="0.45"/>
+          </g>
+          <rect x="2" y="45.5" width="22" height="1.8" rx="0.9" fill="#3ce0ff" opacity="0.45"/>
+          <text x="66" y="32" font-family="Inter, -apple-system, system-ui, sans-serif" font-size="21" letter-spacing="1.2">
+            <tspan fill="#9fb1c9" font-weight="600">SONIC</tspan><tspan fill="#ffffff" font-weight="800" dx="3">FLIGHTS</tspan>
+          </text>
+        </svg>
+      </a>
       <div class="bell" id="bell" title="Notifications">
         <svg class="ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
         <!-- notification dot is injected by JS only when there is an unread notification -->
